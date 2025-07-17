@@ -43,13 +43,13 @@ public class EventServiceImpl implements EventService {
 
     private final EventRepository eventRepository;
     private final EventMapper eventMapper;
-    private final StatsClient statClient;
     private final CategoryRepository categoryRepository;
     private final LocationMapper locationMapper;
     private final UserRepository userRepository;
     private final LocationRepository locationRepository;
     private static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
+    private final StatsClient statClient;
 
     @Transactional
     @Override
