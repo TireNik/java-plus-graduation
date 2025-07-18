@@ -25,8 +25,7 @@ public class StatsServiceImpl implements StatsService {
     @Override
     public void createHit(StatDto dto) {
         Stat stat = statsMapper.toEntity(dto);
-        Stat savedStat = statsRepository.save(stat);
-        statsMapper.toDto(savedStat);
+        statsRepository.save(stat);
     }
 
     @Override

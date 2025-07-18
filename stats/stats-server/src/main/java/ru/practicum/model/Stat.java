@@ -14,14 +14,18 @@ import java.time.LocalDateTime;
 public class Stat {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     Long id;
 
+    @Column(name = "app", nullable = false)
     String app;
 
+    @Column(name = "uri", nullable = false)
     String uri;
 
+    @Column(name = "ip", nullable = false, length = 15)
     String ip;
 
-    @Column(name = "date_stat")
+    @Column(name = "date_stat", columnDefinition = "TIMESTAMP", nullable = false)
     LocalDateTime timestamp;
 }

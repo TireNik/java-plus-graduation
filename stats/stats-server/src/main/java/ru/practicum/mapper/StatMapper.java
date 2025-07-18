@@ -13,7 +13,4 @@ public interface StatMapper {
             "java.time.format.DateTimeFormatter.ofPattern(\"yyyy-MM-dd HH:mm:ss\")))")
     Stat toEntity(StatDto statDto);
 
-    @Mapping(target = "timestamp", expression = "java(entity.getTimestamp().format(" +
-            "java.time.format.DateTimeFormatter.ofPattern(\"yyyy-MM-dd HH:mm:ss\")))")
-    StatDto toDto(Stat entity);
 }
