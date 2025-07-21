@@ -19,8 +19,9 @@ public interface StatClient {
 
     @GetMapping("/stats")
     @ResponseStatus(HttpStatus.OK)
-    List<ViewStats> getStat(@RequestParam("start") String start,
-                            @RequestParam("end") String end,
-                            @RequestParam("uris") List<String> uris,
-                            @RequestParam("unique") boolean unique) throws FeignException;
+    List<ViewStats> getStat(@RequestParam(value = "start", required = false) String start,
+                            @RequestParam(value = "end", required = false) String end,
+                            @RequestParam(value = "uris", required = false) List<String> uris,
+                            @RequestParam(value = "unique", required = false) Boolean unique)
+            throws FeignException;
 }

@@ -44,6 +44,7 @@ public class StatsServiceImpl implements StatsService {
             throw new ValidationException("Время начала не может быть в прошлом");
         }
 
+
         List<ViewStats> statsToReturn;
 
         boolean paramsIsNotExists = params.getUris() == null || params.getUris().isEmpty();
