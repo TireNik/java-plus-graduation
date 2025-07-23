@@ -2,9 +2,9 @@ package ru.practicum.requests.mapper;
 
 import org.springframework.stereotype.Component;
 import ru.practicum.events.model.Event;
-import ru.practicum.requests.dto.ParticipationRequestDto;
+import ru.practicum.requestClient.dto.ParticipationRequestDto;
 import ru.practicum.requests.model.Request;
-import ru.practicum.requests.model.RequestStatus;
+import ru.practicum.requestClient.dto.RequestStatus;
 import ru.practicum.user.model.User;
 
 import java.time.LocalDateTime;

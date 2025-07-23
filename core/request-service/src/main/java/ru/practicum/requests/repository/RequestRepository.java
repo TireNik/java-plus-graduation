@@ -2,7 +2,7 @@ package ru.practicum.requests.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import ru.practicum.requests.model.Request;
-import ru.practicum.requests.model.RequestStatus;
+import ru.practicum.requestClient.dto.RequestStatus;
 import org.springframework.data.jpa.repository.EntityGraph;
 
 

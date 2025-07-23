@@ -10,3 +10,9 @@ spring:
           uri: lb://main-service
           predicates:
             - Path=/**
+
+      routes:
+        - id: request-service-route
+          uri: lb://request-service
+          predicates:
+            - Path=/users/**/requests/**, /users/**/events/**/requests, /users/**/events/**/requests/**

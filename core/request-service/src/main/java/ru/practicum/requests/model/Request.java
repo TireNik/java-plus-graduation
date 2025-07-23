@@ -13,6 +13,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 import ru.practicum.events.model.Event;
+import ru.practicum.requestClient.dto.RequestStatus;
 import ru.practicum.user.model.User;
 
 import java.time.LocalDateTime;

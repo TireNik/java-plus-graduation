@@ -13,16 +13,17 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.StatDto;
-import ru.practicum.ViewStats;
 import ru.practicum.category.model.Category;
 import ru.practicum.category.repository.CategoryRepository;
-import ru.practicum.error.exception.*;
 import ru.practicum.events.dto.*;
 import ru.practicum.events.mapper.*;
 import ru.practicum.events.model.*;
 import ru.practicum.events.repository.*;
-import ru.practicum.requests.model.RequestStatus;
-import ru.practicum.requests.repository.RequestRepository;
+import ru.practicum.requestClient.RequestInternalClient;
+import ru.practicum.requestClient.dto.RequestStatus;
+import ru.practicum.error.exception.ConflictException;
+import ru.practicum.error.exception.NotFoundException;
+import ru.practicum.error.exception.ValidationException;
 import ru.practicum.stats.client.StatClient;
 import ru.practicum.subscriptions.model.Subscription;
 import ru.practicum.user.model.User;
@@ -39,7 +40,7 @@ import java.util.List;
 @Slf4j
 public class EventServiceImpl implements EventService {
 
-    private final RequestRepository requestRepository;
+    private final RequestInternalClient requestInternalClient;
 
     private final EventRepository eventRepository;
     private final EventMapper eventMapper;
@@ -84,7 +85,7 @@ public class EventServiceImpl implements EventService {
                 .forEach(viewStats -> event.setViews(viewStats.getHits()));
 
 
-        long confirmedRequests = requestRepository.countByEventIdAndStatus(id, RequestStatus.CONFIRMED);
+        long confirmedRequests = requestInternalClient.countConfirmedByEvent(id, RequestStatus.CONFIRMED);
 
         EventFullDto eventFullDto = eventMapper.toEventFullDto(event);
 
