@@ -12,9 +12,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
-import ru.practicum.events.model.Event;
 import ru.practicum.requestClient.dto.RequestStatus;
-import ru.practicum.user.model.User;
 
 import java.time.LocalDateTime;
 
@@ -32,11 +30,11 @@ public class Request {
 
     @ManyToOne
     @JoinColumn(name = "event_id", nullable = false)
-    private Event event;
+    private Long event;
 
     @ManyToOne
     @JoinColumn(name = "requester_id", nullable = false)
-    private User requester;
+    private Long requester;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

@@ -83,7 +83,7 @@ services:
       retries: 15
 
   ewm-service:
-    build: core/main-service
+    build: core/user-service
     container_name: ewm-main-service
     depends_on:
       ewm-db:

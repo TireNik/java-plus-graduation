@@ -6,9 +6,9 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.error.exception.ConflictException;
 import ru.practicum.error.exception.NotFoundException;
 import ru.practicum.error.exception.ValidationException;
-import ru.practicum.events.model.Event;
-import ru.practicum.events.model.EventState;
-import ru.practicum.events.repository.EventRepository;
+import ru.practicum.eventClient.event.InternalEventClient;
+import ru.practicum.eventClient.event.dto.EventFullDto;
+import ru.practicum.eventClient.event.dto.EventState;
 import ru.practicum.requestClient.dto.ParticipationRequestDto;
 import ru.practicum.requestClient.dto.RequestUpdateDto;
 import ru.practicum.requestClient.dto.RequestUpdateResultDto;
@@ -16,8 +16,8 @@ import ru.practicum.requests.mapper.RequestMapper;
 import ru.practicum.requests.model.Request;
 import ru.practicum.requestClient.dto.RequestStatus;
 import ru.practicum.requests.repository.RequestRepository;
-import ru.practicum.user.model.User;
-import ru.practicum.user.repository.UserRepository;
+import ru.practicum.userClient.user.InternalUserClient;
+import ru.practicum.userClient.user.dto.UserDto;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -28,8 +28,8 @@ import java.util.List;
 public class RequestServiceImpl implements RequestService {
 
     private final RequestRepository requestRepository;
-    private final UserRepository userRepository;
-    private final EventRepository eventRepository;
+    private final InternalUserClient internalUserClient;
+    private final InternalEventClient internalEventClient;
     private final RequestMapper requestMapper;
 
     @Override
@@ -44,8 +44,8 @@ public class RequestServiceImpl implements RequestService {
     @Override
     @Transactional
     public ParticipationRequestDto createRequest(Long userId, Long eventId) {
-        User user = checkUserExists(userId);
-        Event event = checkEventExists(eventId);
+        UserDto user = checkUserExists(userId);
+        EventFullDto event = checkEventExists(eventId);
 
         if (event.getInitiator().getId().equals(userId)) {
             throw new ConflictException("Инициатор события не может подать запрос на участие");
@@ -70,7 +70,7 @@ public class RequestServiceImpl implements RequestService {
         Request savedRequest = requestRepository.save(request);
         if (request.getStatus() == RequestStatus.CONFIRMED) {
             event.setConfirmedRequests(event.getConfirmedRequests() + 1);
-            eventRepository.save(event);
+            internalEventClient.save(event);
         }
 
         return requestMapper.toDto(savedRequest);
@@ -82,7 +82,7 @@ public class RequestServiceImpl implements RequestService {
         checkUserExists(userId);
         Request request = checkRequestExists(requestId);
 
-        if (!request.getRequester().getId().equals(userId)) {
+        if (!request.getRequester().equals(userId)) {
             throw new ValidationException("Отменить запрос может только его создатель");
         }
         if (request.getStatus() == RequestStatus.CANCELED) {
@@ -92,9 +92,9 @@ public class RequestServiceImpl implements RequestService {
         request.setStatus(RequestStatus.CANCELED);
 
         if (request.getStatus() == RequestStatus.CONFIRMED) {
-            Event event = request.getEvent();
+            EventFullDto event = checkEventExists(request.getEvent());
             event.setConfirmedRequests(event.getConfirmedRequests() - 1);
-            eventRepository.save(event);
+            internalEventClient.save(event);
         }
 
         return requestMapper.toDto(requestRepository.save(request));
@@ -103,7 +103,7 @@ public class RequestServiceImpl implements RequestService {
     @Override
     public List<ParticipationRequestDto> getEventRequests(Long userId, Long eventId) {
         checkUserExists(userId);
-        Event event = checkEventExists(eventId);
+        EventFullDto event = checkEventExists(eventId);
 
         if (!event.getInitiator().getId().equals(userId)) {
             throw new ValidationException("Список запросов доступен только инициатору события");
@@ -118,7 +118,7 @@ public class RequestServiceImpl implements RequestService {
     @Transactional
     public RequestUpdateResultDto updateEventRequests(Long userId, Long eventId, RequestUpdateDto updateDto) {
         checkUserExists(userId);
-        Event event = checkEventExists(eventId);
+        EventFullDto event = checkEventExists(eventId);
 
         if (!event.getInitiator().getId().equals(userId)) {
             throw new ConflictException("Обновлять запросы может только инициатор события");
@@ -173,19 +173,18 @@ public class RequestServiceImpl implements RequestService {
 
         requestRepository.saveAll(requests);
         event.setConfirmedRequests(currentConfirmed);
-        eventRepository.save(event);
+        internalEventClient.save(event);
 
         return new RequestUpdateResultDto(confirmedRequests, rejectedRequests);
     }
 
-    private User checkUserExists(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с ID=" + userId + " не найден"));
+    private UserDto checkUserExists(Long userId) {
+        return internalUserClient.getUserById(userId);
+
     }
 
-    private Event checkEventExists(Long eventId) {
-        return eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Событие с ID=" + eventId + " не найдено"));
+    private EventFullDto checkEventExists(Long eventId) {
+        return internalEventClient.getEventById(eventId);
     }
 
     private Request checkRequestExists(Long requestId) {
