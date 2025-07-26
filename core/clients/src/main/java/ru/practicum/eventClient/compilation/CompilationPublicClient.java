@@ -8,7 +8,7 @@ import ru.practicum.eventClient.compilation.dto.CompilationDtoResponse;
 
 import java.util.List;
 
-@FeignClient(name = "event-service", path = "/compilations")
+@FeignClient(name = "event-service", contextId = "compilationPublicRequestClient", path = "/compilations")
 public interface CompilationPublicClient {
 
     @GetMapping("/{compId}")

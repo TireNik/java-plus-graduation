@@ -20,6 +20,6 @@ public class RequestInternalController implements RequestInternalClient {
     @Override
     public long countConfirmedByEvent(@RequestParam("eventId") Long eventId,
                                       @RequestParam("status") RequestStatus status) throws FeignException {
-        return requestRepository.countByEventIdAndStatus(eventId, status);
+        return requestRepository.countByEventAndStatus(eventId, status);
     }
 }

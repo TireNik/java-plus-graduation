@@ -303,7 +303,7 @@ public class EventServiceImpl implements EventService {
                 throw new NotFoundException("Пользователь с ID=" + userId + " не найден");
             }
 
-            Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
+            Event event = eventRepository.findByIdAndInitiator(eventId, userId)
                     .orElseThrow(() -> new NotFoundException("Событие с ID=" + eventId + " не найдено"));
 
             return eventMapper.toEventFullDto(event);
@@ -335,7 +335,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventShortDto> getEvents(Long userId, int from, int size) {
         Pageable pageable = PageRequest.of(from / size, size);
-        List<Event> events = eventRepository.findByInitiatorId(userId, pageable);
+        List<Event> events = eventRepository.findByInitiator(userId, pageable);
         return events.stream()
                 .map(eventMapper::toEventShortDto)
                 .toList();

@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import ru.practicum.requestClient.dto.RequestStatus;
 
-@FeignClient(name = "request-service", path = "/internal/requests")
+@FeignClient(name = "request-service", contextId = "requestInternalClient", path = "/internal/requests")
 public interface RequestInternalClient {
 
     @GetMapping("/count")

@@ -2,6 +2,9 @@ package ru.practicum.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.commentClient.dto.CommentDtoRequest;
@@ -51,10 +54,12 @@ public class CommentServiceManager implements CommentService {
 
     @Override
     public List<CommentDtoResponse> getCommentsOfEventPublic(Long eventId, Integer from, Integer size) {
-        List<CommentDtoResponse> responseCommentsDTO = commentMapper.toResponseCommentDto(commentRepository
-                .findAllCommentsForEvent(eventId, from, size));
+        Pageable pageable = PageRequest.of(from / size, size, Sort.by("id").ascending());
 
-        log.info("Получение всех комментариев для события c id {} по параметрам:  from: {}, size: {}.",
+        List<Comment> comments = commentRepository.findAllCommentsForEvent(eventId, pageable);
+        List<CommentDtoResponse> responseCommentsDTO = commentMapper.toResponseCommentDto(comments);
+
+        log.info("Получение всех комментариев для события c id {} по параметрам: from: {}, size: {}.",
                 eventId, from, size);
         return responseCommentsDTO;
     }

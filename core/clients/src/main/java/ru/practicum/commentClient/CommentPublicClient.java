@@ -8,7 +8,7 @@ import ru.practicum.commentClient.dto.CommentDtoResponse;
 
 import java.util.List;
 
-@FeignClient(name = "comment-service", path = "/comments")
+@FeignClient(name = "comment-service", contextId = "CommentPublicClient", path = "/comments")
 public interface CommentPublicClient {
 
     @GetMapping("/{eventId}")

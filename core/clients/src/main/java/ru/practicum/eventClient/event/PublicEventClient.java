@@ -12,7 +12,7 @@ import ru.practicum.eventClient.event.dto.EventShortDto;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@FeignClient(name = "event-service", path = "/events")
+@FeignClient(name = "event-service", contextId = "PublicEventClient", path = "/events")
 public interface PublicEventClient {
 
     @GetMapping

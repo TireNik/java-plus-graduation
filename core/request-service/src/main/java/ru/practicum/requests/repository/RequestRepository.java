@@ -11,16 +11,16 @@ import java.util.List;
 public interface RequestRepository extends JpaRepository<Request, Long> {
 
     @EntityGraph(attributePaths = {"event", "requester"})
-    List<Request> findByRequesterId(Long requesterId);
+    List<Request> findByRequester(Long requesterId);
 
     @EntityGraph(attributePaths = {"event", "requester"})
-    List<Request> findByEventId(Long eventId);
+    List<Request> findByEvent(Long eventId);
 
-    boolean existsByRequesterIdAndEventId(Long requesterId, Long eventId);
+    boolean existsByRequesterAndEvent(Long requesterId, Long eventId);
 
     @EntityGraph(attributePaths = {"event", "requester"})
     List<Request> findAllByIdIn(List<Long> requestIds);
 
-    long countByEventIdAndStatus(Long eventId, RequestStatus status);
+    long countByEventAndStatus(Long eventId, RequestStatus status);
 
 }

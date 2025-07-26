@@ -8,7 +8,7 @@ import ru.practicum.userClient.user.dto.UserDto;
 
 import java.util.List;
 
-@FeignClient(name = "user-service", path = "/admin/users")
+@FeignClient(name = "user-service", contextId = "adminClient", path = "/admin/users")
 public interface UserAdminClient {
 
     @GetMapping

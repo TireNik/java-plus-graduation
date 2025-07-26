@@ -6,7 +6,7 @@ import ru.practicum.eventClient.compilation.dto.CompilationDtoRequest;
 import ru.practicum.eventClient.compilation.dto.CompilationDtoResponse;
 import ru.practicum.eventClient.compilation.dto.CompilationDtoUpdate;
 
-@FeignClient(name = "event-service", path = "/admin/compilations")
+@FeignClient(name = "event-service", contextId = "compilationAdminRequestClient", path = "/admin/compilations")
 public interface CompilationAdminClient {
 
     @PostMapping

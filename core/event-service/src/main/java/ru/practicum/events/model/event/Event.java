@@ -47,7 +47,6 @@ public class Event {
     @JoinColumn(name = "category_id")
     Category category;
 
-    @ManyToOne
     @JoinColumn(name = "user_id")
     Long initiator;
 

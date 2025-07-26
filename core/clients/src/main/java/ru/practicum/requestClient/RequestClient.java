@@ -8,7 +8,7 @@ import ru.practicum.requestClient.dto.RequestUpdateResultDto;
 
 import java.util.List;
 
-@FeignClient(name = "request-service", path = "/users")
+@FeignClient(name = "request-service", contextId = "requestClient", path = "/users")
 public interface RequestClient {
 
     @GetMapping("/{userId}/requests")

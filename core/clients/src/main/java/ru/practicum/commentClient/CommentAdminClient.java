@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import ru.practicum.commentClient.dto.CommentDtoResponse;
 
-@FeignClient(name = "comment-service", path = "/admin/comments")
+@FeignClient(name = "comment-service", contextId = "CommentAdminClient", path = "/admin/comments")
 public interface CommentAdminClient {
 
     @GetMapping("/{commentId}")

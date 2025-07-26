@@ -36,7 +36,7 @@ public class RequestServiceImpl implements RequestService {
     public List<ParticipationRequestDto> getUserRequests(Long userId) {
         checkUserExists(userId);
 
-        return requestRepository.findByRequesterId(userId).stream()
+        return requestRepository.findByRequester(userId).stream()
                 .map(requestMapper::toDto)
                 .toList();
     }
@@ -53,7 +53,7 @@ public class RequestServiceImpl implements RequestService {
         if (event.getState() != EventState.PUBLISHED) {
             throw new ConflictException("Событие ещё не опубликовано");
         }
-        if (requestRepository.existsByRequesterIdAndEventId(userId, eventId)) {
+        if (requestRepository.existsByRequesterAndEvent(userId, eventId)) {
             throw new ConflictException("Запрос уже существует");
         }
         if (event.getParticipantLimit() > 0 && event.getConfirmedRequests() >= event.getParticipantLimit()) {
@@ -109,7 +109,7 @@ public class RequestServiceImpl implements RequestService {
             throw new ValidationException("Список запросов доступен только инициатору события");
         }
 
-        return requestRepository.findByEventId(eventId).stream()
+        return requestRepository.findByEvent(eventId).stream()
                 .map(requestMapper::toDto)
                 .toList();
     }

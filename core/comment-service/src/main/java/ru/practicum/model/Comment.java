@@ -25,12 +25,10 @@ public class Comment {
     @Column(name = "message", nullable = false, length = 1000)
     private String message;
 
-    @ManyToOne
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "event_id", referencedColumnName = "id")
     private Long event;
 
-    @ManyToOne
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "author_id", referencedColumnName = "id")
     private Long authorId;

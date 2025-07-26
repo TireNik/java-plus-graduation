@@ -11,29 +11,19 @@ spring:
         - id: user-service-route
           uri: lb://user-service
           predicates:
-            - Path=/admin/users/**,
-              /users/**/subscriptions/**,
-              /users/**/subscribers
+            - Path=/admin/users/**,/users/{userId}/subscriptions/**,/users/{userId}/subscribers
 
         - id: request-service-route
           uri: lb://request-service
           predicates:
-            - Path=/users/**/requests/**, /users/**/events/**/requests, /users/**/events/**/requests/**
+            - Path=/users/{userId}/requests/**,/users/{userId}/events/{eventId}/requests,/users/{userId}/events/{eventId}/requests/**
 
         - id: event-service-route
           uri: lb://event-service
           predicates:
-            - Path=/events/**,
-              /users/**/events/**,
-              /admin/events/**,
-              /categories/**,
-              /admin/categories/**,
-              /compilations/**,
-              /admin/compilations/**
+            - Path=/events/**,/users/{userId}/events/**,/admin/events/**,/categories/**,/admin/categories/**,/compilations/**,/admin/compilations/**
 
         - id: comment-service-route
           uri: lb://comment-service
           predicates:
-            - Path=/admin/comments/**,
-              /users/**/comments/**,
-              /comments/**
+            - Path=/admin/comments/**,/users/{userId}/comments/**,/comments/**

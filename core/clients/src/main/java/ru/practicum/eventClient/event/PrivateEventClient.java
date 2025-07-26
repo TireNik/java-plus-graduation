@@ -10,7 +10,7 @@ import ru.practicum.eventClient.event.dto.UpdateEventUserRequestDto;
 
 import java.util.List;
 
-@FeignClient(name = "event-service", path = "/users/{userId}/events")
+@FeignClient(name = "event-service", contextId = "PrivateEventClient", path = "/users/{userId}/events")
 public interface PrivateEventClient {
 
     @GetMapping("/{eventId}")

@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.eventClient.category.dto.CategoryDto;
 import ru.practicum.eventClient.category.dto.CategoryDtoNew;
 
-@FeignClient(name = "category-service", path = "/admin/categories")
+@FeignClient(name = "category-service", contextId = "adminRequestClient", path = "/admin/categories")
 public interface CategoryAdminClient {
 
     @PostMapping
