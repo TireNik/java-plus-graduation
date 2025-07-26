@@ -14,12 +14,13 @@ import java.util.List;
 public interface CommentMapper {
 
     @Mapping(target = "created", expression = "java(java.time.LocalDateTime.now())")
-    @Mapping(target = "author", source = "user")
+    @Mapping(target = "authorId", source = "user.id")
+    @Mapping(target = "event", source = "event.id")
     @Mapping(target = "id", ignore = true)
     Comment commentDtotoComment(CommentDtoRequest commentDtoRequest, UserDto user, EventFullDto event);
 
-    @Mapping(target = "authorId", source = "author.id")
-    @Mapping(target = "eventId", source = "event.id")
+    @Mapping(target = "authorId", source = "authorId")
+    @Mapping(target = "eventId", source = "event")
     CommentDtoResponse toResponseCommentDto(Comment comment);
 
     List<CommentDtoResponse> toResponseCommentDto(List<Comment> comments);

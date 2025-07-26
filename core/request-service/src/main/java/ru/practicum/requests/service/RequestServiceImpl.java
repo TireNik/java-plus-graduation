@@ -62,15 +62,15 @@ public class RequestServiceImpl implements RequestService {
 
         Request request = new Request();
         request.setCreated(LocalDateTime.now());
-        request.setEvent(event);
-        request.setRequester(user);
+        request.setEvent(event.getId());
+        request.setRequester(user.getId());
         request.setStatus(event.isRequestModeration() &&
                 event.getParticipantLimit() > 0 ? RequestStatus.PENDING : RequestStatus.CONFIRMED);
 
         Request savedRequest = requestRepository.save(request);
         if (request.getStatus() == RequestStatus.CONFIRMED) {
             event.setConfirmedRequests(event.getConfirmedRequests() + 1);
-            internalEventClient.save(event);
+            internalEventClient.createEvent(event);
         }
 
         return requestMapper.toDto(savedRequest);
@@ -94,7 +94,7 @@ public class RequestServiceImpl implements RequestService {
         if (request.getStatus() == RequestStatus.CONFIRMED) {
             EventFullDto event = checkEventExists(request.getEvent());
             event.setConfirmedRequests(event.getConfirmedRequests() - 1);
-            internalEventClient.save(event);
+            internalEventClient.createEvent(event);
         }
 
         return requestMapper.toDto(requestRepository.save(request));
@@ -173,7 +173,7 @@ public class RequestServiceImpl implements RequestService {
 
         requestRepository.saveAll(requests);
         event.setConfirmedRequests(currentConfirmed);
-        internalEventClient.save(event);
+        internalEventClient.createEvent(event);
 
         return new RequestUpdateResultDto(confirmedRequests, rejectedRequests);
     }

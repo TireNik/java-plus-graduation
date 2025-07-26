@@ -21,4 +21,10 @@ public class InternalEventServiceImpl implements InternalEventService{
         return eventMapper.toEventFullDto(eventRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Событие с ID=" + id + " не найдено")));
     }
+
+    @Override
+    public void createEvent(EventFullDto eventFullDto) {
+        eventRepository.save(eventMapper.toEventFromFullDto(eventFullDto));
+        log.info("Событие с ID={} успешно создано", eventFullDto.getId());
+    }
 }

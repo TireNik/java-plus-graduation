@@ -9,6 +9,7 @@ import ru.practicum.events.model.category.Category;
 import ru.practicum.events.model.event.Event;
 import ru.practicum.events.model.event.Location;
 import ru.practicum.userClient.user.dto.UserDto;
+import ru.practicum.userClient.user.dto.UserShortDto;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface EventMapper {
@@ -50,4 +51,26 @@ public interface EventMapper {
 
     @Mapping(target = "eventDate", dateFormat = DATE_FORMAT)
     EventShortDto toEventShortDto(Event event);
+
+    @Mapping(target = "eventDate", dateFormat = DATE_FORMAT)
+    Event toEventFromFullDto(EventFullDto eventFullDto);
+
+    default Long map(UserDto userDto) {
+        return userDto != null ? userDto.getId() : null;
+    }
+
+    default Long map(Event event) {
+        return event != null ? event.getId() : null;
+    }
+
+    default UserShortDto map(Long userId) {
+        if (userId == null) return null;
+        UserShortDto dto = new UserShortDto();
+        dto.setId(userId);
+        return dto;
+    }
+
+    default Long map(UserShortDto dto) {
+        return dto != null ? dto.getId() : null;
+    }
 }
