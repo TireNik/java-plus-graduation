@@ -25,11 +25,9 @@ public class Comment {
     @Column(name = "message", nullable = false, length = 1000)
     private String message;
 
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "event_id", referencedColumnName = "id")
+    @Column(name = "event_id", nullable = false)
     private Long event;
 
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "author_id", referencedColumnName = "id")
+    @Column(name = "author_id", nullable = false)
     private Long authorId;
 }

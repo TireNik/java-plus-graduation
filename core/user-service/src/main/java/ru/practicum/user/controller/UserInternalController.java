@@ -22,9 +22,9 @@ public class UserInternalController implements InternalUserClient {
     }
 
     @Override
-    @GetMapping("/exists/{id}")
+    @GetMapping("/{id}/exists")
     @ResponseStatus(HttpStatus.OK)
-    public Boolean existsById(Long id) {
+    public Boolean existsById(@PathVariable Long id) {
         return userInternalService.existsById(id);
     }
 }

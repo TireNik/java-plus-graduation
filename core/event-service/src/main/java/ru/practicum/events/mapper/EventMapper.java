@@ -11,10 +11,15 @@ import ru.practicum.events.model.event.Location;
 import ru.practicum.userClient.user.dto.UserDto;
 import ru.practicum.userClient.user.dto.UserShortDto;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface EventMapper {
 
     String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "initiator", source = "initiator")
@@ -52,8 +57,13 @@ public interface EventMapper {
     @Mapping(target = "eventDate", dateFormat = DATE_FORMAT)
     EventShortDto toEventShortDto(Event event);
 
-    @Mapping(target = "eventDate", dateFormat = DATE_FORMAT)
-    Event toEventFromFullDto(EventFullDto eventFullDto);
+    @Mapping(target = "eventDate", source = "eventDate", qualifiedByName = "stringToDateTime")
+    Event toEventFromFullDto(EventFullDto dto);
+
+    @Named("stringToDateTime")
+    static LocalDateTime map(String date) {
+        return LocalDateTime.parse(date, FORMATTER);
+    }
 
     default Long map(UserDto userDto) {
         return userDto != null ? userDto.getId() : null;
