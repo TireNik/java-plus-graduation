@@ -18,12 +18,14 @@ public class InternalEventServiceImpl implements InternalEventService{
 
     @Override
     public EventFullDto getEventById(Long id) {
+        log.info("Получение события с ID={}", id);
         return eventMapper.toEventFullDto(eventRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Событие с ID=" + id + " не найдено")));
     }
 
     @Override
     public void createEvent(EventFullDto eventFullDto) {
+        log.info("Создание события с ID={}", eventFullDto.getId());
         eventRepository.save(eventMapper.toEventFromFullDto(eventFullDto));
         log.info("Событие с ID={} успешно создано", eventFullDto.getId());
     }

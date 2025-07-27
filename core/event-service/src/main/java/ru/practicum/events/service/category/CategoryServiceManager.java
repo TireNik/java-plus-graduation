@@ -24,7 +24,7 @@ import java.util.Optional;
 public class CategoryServiceManager implements CategoryService {
     private final CategoryMapper categoryMapper;
     private final CategoryRepository categoryRepository;
-    private final EventRepository eventRepository;//репозиторий событий
+    private final EventRepository eventRepository;
 
     @Override
     @Transactional
