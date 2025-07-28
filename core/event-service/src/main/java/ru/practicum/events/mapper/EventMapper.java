@@ -57,13 +57,8 @@ public interface EventMapper {
     @Mapping(target = "eventDate", dateFormat = DATE_FORMAT)
     EventShortDto toEventShortDto(Event event);
 
-    @Mapping(target = "eventDate", source = "eventDate", qualifiedByName = "stringToDateTime")
     Event toEventFromFullDto(EventFullDto dto);
 
-    @Named("stringToDateTime")
-    static LocalDateTime map(String date) {
-        return LocalDateTime.parse(date, FORMATTER);
-    }
 
     default Long map(UserDto userDto) {
         return userDto != null ? userDto.getId() : null;

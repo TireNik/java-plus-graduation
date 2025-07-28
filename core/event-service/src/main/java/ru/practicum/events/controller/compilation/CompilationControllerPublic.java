@@ -20,7 +20,7 @@ import java.util.List;
 public class CompilationControllerPublic {
     private final CompilationService compilationService;
 
-    @GetMapping("/{catId}")
+    @GetMapping("/{compId}")
     public ResponseEntity<CompilationDtoResponse> getById(@PathVariable Long compId) {
         log.info("Эндпоинт /compilations/{}. GET запрос на получение(public) подборки с id {}.", compId, compId);
         return new ResponseEntity<CompilationDtoResponse>(compilationService.getCompilationByIdPublic(compId),

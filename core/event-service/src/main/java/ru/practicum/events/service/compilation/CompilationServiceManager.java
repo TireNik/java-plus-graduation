@@ -33,7 +33,7 @@ public class CompilationServiceManager implements CompilationService {
 
     @Override
     @Transactional
-    public CompilationDtoResponse createCompilationAdmin(CompilationDtoRequest compilationDtoRequest) {
+    public CompilationDtoResponse   createCompilationAdmin(CompilationDtoRequest compilationDtoRequest) {
         if (compilationDtoRequest.getPinned() == null) {
             compilationDtoRequest.setPinned(false);
         }
@@ -42,6 +42,7 @@ public class CompilationServiceManager implements CompilationService {
         Compilation compilation = compilationRepository.save(compilationMapper.toCompilation(compilationDtoRequest,
                 events));
 
+        log.info("Новая компиляция создана {}", compilation.getId());
         log.info("Создание новой подборки {}", compilationDtoRequest);
         return compilationMapper.toCompilationDto(compilation, mapEventsToShortDto(events));
     }
