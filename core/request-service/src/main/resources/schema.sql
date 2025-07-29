@@ -3,7 +3,5 @@ CREATE TABLE IF NOT EXISTS requests (
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     event_id BIGINT NOT NULL,
     requester_id BIGINT NOT NULL,
-    status VARCHAR(50) NOT NULL,
-    CONSTRAINT fk_request_event FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
-    CONSTRAINT fk_request_requester FOREIGN KEY (requester_id) REFERENCES users(id) ON DELETE CASCADE
+    status VARCHAR(50) NOT NULL
 );

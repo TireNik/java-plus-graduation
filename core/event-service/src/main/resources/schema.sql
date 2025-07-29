@@ -33,7 +33,6 @@ CREATE TABLE IF NOT EXISTS events (
     confirmed_requests INTEGER NOT NULL DEFAULT 0,
     views BIGINT,
     CONSTRAINT fk_event_category FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE RESTRICT,
-    CONSTRAINT fk_event_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT,
     CONSTRAINT fk_event_location FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE RESTRICT
     );
 
