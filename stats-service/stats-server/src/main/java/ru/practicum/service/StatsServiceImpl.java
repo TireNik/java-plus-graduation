@@ -2,8 +2,6 @@ package ru.practicum.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.RequestParamDto;
@@ -23,7 +21,6 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class StatsServiceImpl implements StatsService {
 
-    private static final Logger log = LoggerFactory.getLogger(StatsServiceImpl.class);
     private final StatsRepository statsRepository;
     private final StatMapper statsMapper;
 
