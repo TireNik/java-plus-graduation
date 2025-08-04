@@ -12,7 +12,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.StatDto;
 import ru.practicum.eventClient.event.dto.*;
 import ru.practicum.events.mapper.*;
 import ru.practicum.events.model.category.Category;
@@ -28,7 +27,6 @@ import ru.practicum.requestClient.dto.RequestStatus;
 import ru.practicum.error.exception.ConflictException;
 import ru.practicum.error.exception.NotFoundException;
 import ru.practicum.error.exception.ValidationException;
-import ru.practicum.stats.client.StatClient;
 import ru.practicum.userClient.subscriptions.dto.SubscriptionDto;
 import ru.practicum.userClient.user.InternalUserClient;
 import ru.practicum.userClient.user.dto.UserDto;
@@ -48,7 +46,6 @@ public class EventServiceImpl implements EventService {
 
     private final EventRepository eventRepository;
     private final EventMapper eventMapper;
-    private final StatClient statClient;
     private final CategoryRepository categoryRepository;
     private final LocationMapper locationMapper;
     private final InternalUserClient internalUserClient;
@@ -64,14 +61,14 @@ public class EventServiceImpl implements EventService {
                 .filter(e -> e.getState() == EventState.PUBLISHED)
                 .orElseThrow(() -> new NotFoundException("Событие с id=" + id + " не найдено"));
 
-        StatDto statDto = new StatDto(
-                "main-service",
-                request.getRequestURI(),
-                request.getRemoteAddr(),
-                LocalDateTime.now().format(FORMATTER)
-        );
-        log.info("Статистика: {}", statDto);
-        statClient.hit(statDto);
+//        StatDto statDto = new StatDto(
+//                "main-service",
+//                request.getRequestURI(),
+//                request.getRemoteAddr(),
+//                LocalDateTime.now().format(FORMATTER)
+//        );
+//        log.info("Статистика: {}", statDto);
+//        statClient.hit(statDto);
 
         try {
             Thread.sleep(500);
@@ -83,10 +80,10 @@ public class EventServiceImpl implements EventService {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime start = now.minusYears(TIME_BEFORE);
 
-        statClient.getStat(start.toString(),
-                        now.toString(),
-                        List.of("/events/" + id), true)
-                .forEach(viewStats -> event.setViews(viewStats.getHits()));
+//        statClient.getStat(start.toString(),
+//                        now.toString(),
+//                        List.of("/events/" + id), true)
+//                .forEach(viewStats -> event.setViews(viewStats.getHits()));
 
 
         long confirmedRequests = requestInternalClient.countConfirmedByEvent(id, RequestStatus.CONFIRMED);
@@ -104,13 +101,13 @@ public class EventServiceImpl implements EventService {
                                                LocalDateTime rangeStart, LocalDateTime rangeEnd,
                                                Boolean onlyAvailable, String sort, int from, int size,
                                                HttpServletRequest request) {
-        StatDto statDto = new StatDto(
-                "main-service",
-                request.getRequestURI(),
-                request.getRemoteAddr(),
-                LocalDateTime.now().format(FORMATTER)
-        );
-        statClient.hit(statDto);
+//        StatDto statDto = new StatDto(
+//                "main-service",
+//                request.getRequestURI(),
+//                request.getRemoteAddr(),
+//                LocalDateTime.now().format(FORMATTER)
+//        );
+//        statClient.hit(statDto);
 
         if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
             throw new ValidationException("Начало диапазона не может быть позже его конца");
@@ -292,12 +289,12 @@ public class EventServiceImpl implements EventService {
     public EventFullDto privateGetUserEvent(Long userId, Long eventId, HttpServletRequest request) {
         log.info("userId: {}", userId);
         try {
-            statClient.hit(new StatDto(
-                    "event-service",
-                    request.getRequestURI(),
-                    request.getRemoteAddr(),
-                    LocalDateTime.now().format(FORMATTER)
-            ));
+//            statClient.hit(new StatDto(
+//                    "event-service",
+//                    request.getRequestURI(),
+//                    request.getRemoteAddr(),
+//                    LocalDateTime.now().format(FORMATTER)
+//            ));
 
             if (!internalUserClient.existsById(userId)) {
                 throw new NotFoundException("Пользователь с ID=" + userId + " не найден");
@@ -392,12 +389,12 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventShortDto> getSubscribedEvents(Long userId, int from, int size, HttpServletRequest request) {
-        statClient.hit(new StatDto(
-                "main-service",
-                request.getRequestURI(),
-                request.getRemoteAddr(),
-                LocalDateTime.now().format(FORMATTER)
-        ));
+//        statClient.hit(new StatDto(
+//                "main-service",
+//                request.getRequestURI(),
+//                request.getRemoteAddr(),
+//                LocalDateTime.now().format(FORMATTER)
+//        ));
 
         Pageable pageable = PageRequest.of(
                 from / size, size, Sort.by(Sort.Direction.DESC, "eventDate"));
