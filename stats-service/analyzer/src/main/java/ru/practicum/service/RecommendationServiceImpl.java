@@ -5,7 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import ru.practicum.ewm.grpc.stats.event.InteractionsCountRequestProto;
 import ru.practicum.ewm.grpc.stats.event.RecommendedEventProto;
+import ru.practicum.ewm.grpc.stats.event.SimilarEventsRequestProto;
 import ru.practicum.ewm.grpc.stats.event.UserPredictionsRequestProto;
 import ru.practicum.model.EventSimilarity;
 import ru.practicum.model.UserAction;
@@ -51,6 +53,40 @@ public class RecommendationServiceImpl implements RecommendationService {
 
         return processSimilarEvents(similarEvents, eventIds, allUserEventIds, userId, maxResults);
 
+    }
+
+    @Override
+    public List<RecommendedEventProto> getSimilarEvents(SimilarEventsRequestProto request) {
+        Long eventId = request.getEventId();
+        Long userId = request.getUserId();
+        int maxResults = request.getMaxResults();
+
+        List<EventSimilarity> eventSimilarities = eventSimilarityRepository.findAllByEventAOrEventB(
+                eventId, eventId,
+                PageRequest.of(0, maxResults * 2, Sort.by(Sort.Direction.DESC, "score")));
+
+        if (eventSimilarities.isEmpty()) {
+            return List.of();
+        }
+
+        Set<Long> userViewedEvents = userActionRepository.findAllEventIdsByUserId(userId);
+        Set<Long> sourceEventIds = Set.of(eventId);
+
+        return processSimilarEvents(eventSimilarities, sourceEventIds, userViewedEvents, userId, maxResults);
+    }
+
+    @Override
+    public List<RecommendedEventProto> getInteractionsCount(InteractionsCountRequestProto request) {
+        return request.getEventIdList().stream()
+                .map(eId -> {
+                    Float score = userActionRepository.getSumWeightByEventId(eId);
+                    return RecommendedEventProto.newBuilder()
+                            .setEventId(eId)
+                            .setScore(score != null ? score : 0f)
+                            .build();
+                })
+                .sorted(Comparator.comparing(RecommendedEventProto::getScore).reversed())
+                .collect(Collectors.toList());
     }
 
     private List<RecommendedEventProto> processSimilarEvents(List<EventSimilarity> similarEvents,

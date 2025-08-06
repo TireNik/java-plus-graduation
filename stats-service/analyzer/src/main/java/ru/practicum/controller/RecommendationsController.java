@@ -32,12 +32,29 @@ public class RecommendationsController extends RecommendationsControllerGrpc.Rec
     }
 
     @Override
-    public void getSimilarEvents(SimilarEventsRequestProto request, StreamObserver<RecommendedEventProto> responseObserver) {
-        super.getSimilarEvents(request, responseObserver);
+    public void getSimilarEvents(SimilarEventsRequestProto request,
+                                 StreamObserver<RecommendedEventProto> responseObserver) {
+        try {
+            log.info("Получение похожих мероприятий {}", request);
+            service.getSimilarEvents(request).forEach(responseObserver::onNext);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            log.error("Ошибка получения похожих мероприятий.");
+            responseObserver.onError(e);
+        }
     }
 
     @Override
-    public void getInteractionsCount(InteractionsCountRequestProto request, StreamObserver<RecommendedEventProto> responseObserver) {
-        super.getInteractionsCount(request, responseObserver);
+    public void getInteractionsCount(InteractionsCountRequestProto request,
+                                     StreamObserver<RecommendedEventProto> responseObserver) {
+        try {
+            log.info("Получение мероприятий для каждого пользователя {}", request);
+
+            service.getInteractionsCount(request).forEach(responseObserver::onNext);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            log.error("Ошибка получения мероприятий.");
+            responseObserver.onError(e);
+        }
     }
 }

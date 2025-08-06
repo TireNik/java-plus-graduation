@@ -22,15 +22,19 @@ import ru.practicum.events.model.event.Location;
 import ru.practicum.events.repository.category.CategoryRepository;
 import ru.practicum.events.repository.event.EventRepository;
 import ru.practicum.events.repository.event.LocationRepository;
+import ru.practicum.ewm.grpc.stats.event.ActionTypeProto;
 import ru.practicum.requestClient.RequestInternalClient;
 import ru.practicum.requestClient.dto.RequestStatus;
 import ru.practicum.error.exception.ConflictException;
 import ru.practicum.error.exception.NotFoundException;
 import ru.practicum.error.exception.ValidationException;
+import ru.practicum.stats.client.RecommendationsClient;
+import ru.practicum.stats.client.UserActionClient;
 import ru.practicum.userClient.subscriptions.dto.SubscriptionDto;
 import ru.practicum.userClient.user.InternalUserClient;
 import ru.practicum.userClient.user.dto.UserDto;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -50,6 +54,8 @@ public class EventServiceImpl implements EventService {
     private final LocationMapper locationMapper;
     private final InternalUserClient internalUserClient;
     private final LocationRepository locationRepository;
+    private final UserActionClient userActionClient;
+    private final RecommendationsClient recommendationsClient;
     private static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
     private static final int TIME_BEFORE = 10;
@@ -57,18 +63,28 @@ public class EventServiceImpl implements EventService {
     @Transactional
     @Override
     public EventFullDto getEventById(Long id, HttpServletRequest request) {
+        String userIdHeader = request.getHeader("X-EWM-USER-ID");
+        Long userId;
+        try {
+            userId = userIdHeader != null ? Long.parseLong(userIdHeader) : null;
+        } catch (NumberFormatException e) {
+            throw new ValidationException("Некорректный формат X-EWM-USER-ID: " + userIdHeader);
+        }
+
         Event event = eventRepository.findById(id)
                 .filter(e -> e.getState() == EventState.PUBLISHED)
                 .orElseThrow(() -> new NotFoundException("Событие с id=" + id + " не найдено"));
 
-//        StatDto statDto = new StatDto(
-//                "main-service",
-//                request.getRequestURI(),
-//                request.getRemoteAddr(),
-//                LocalDateTime.now().format(FORMATTER)
-//        );
-//        log.info("Статистика: {}", statDto);
-//        statClient.hit(statDto);
+        try {
+            userActionClient.collectUserAction(
+                    id,
+                    userId,
+                    ActionTypeProto.ACTION_VIEW,
+                    Instant.now()
+            );
+        } catch (Exception e) {
+            log.error("Ошибка при отправке информации о просмотре для события id={} и пользователя id={}", id, userId, e);
+        }
 
         try {
             Thread.sleep(500);
@@ -77,19 +93,9 @@ public class EventServiceImpl implements EventService {
             log.warn("Поток был прерван во время ожидания", e);
         }
 
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime start = now.minusYears(TIME_BEFORE);
-
-//        statClient.getStat(start.toString(),
-//                        now.toString(),
-//                        List.of("/events/" + id), true)
-//                .forEach(viewStats -> event.setViews(viewStats.getHits()));
-
-
         long confirmedRequests = requestInternalClient.countConfirmedByEvent(id, RequestStatus.CONFIRMED);
 
         EventFullDto eventFullDto = eventMapper.toEventFullDto(event);
-
         eventFullDto.setConfirmedRequests((int) confirmedRequests);
         eventRepository.save(event);
 
@@ -101,13 +107,7 @@ public class EventServiceImpl implements EventService {
                                                LocalDateTime rangeStart, LocalDateTime rangeEnd,
                                                Boolean onlyAvailable, String sort, int from, int size,
                                                HttpServletRequest request) {
-//        StatDto statDto = new StatDto(
-//                "main-service",
-//                request.getRequestURI(),
-//                request.getRemoteAddr(),
-//                LocalDateTime.now().format(FORMATTER)
-//        );
-//        statClient.hit(statDto);
+
 
         if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
             throw new ValidationException("Начало диапазона не может быть позже его конца");

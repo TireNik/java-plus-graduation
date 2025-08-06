@@ -21,6 +21,6 @@ public class EventShortDto {
     UserShortDto initiator;
 
     Long confirmedRequests;
-    Long views;
+    Double rating;
 
 }

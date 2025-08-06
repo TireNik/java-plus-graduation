@@ -60,7 +60,7 @@ public class Event {
     @Column(name = "confirmed_requests")
     Integer confirmedRequests = 0;
 
-    @Column(name = "views")
-    Long views;
+    @Column(name = "ratings")
+    Double rating;
 
 }

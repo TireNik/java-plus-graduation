@@ -11,7 +11,6 @@ import ru.practicum.events.model.event.Location;
 import ru.practicum.userClient.user.dto.UserDto;
 import ru.practicum.userClient.user.dto.UserShortDto;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 
@@ -33,7 +32,7 @@ public interface EventMapper {
     @Mapping(target = "requestModeration", source = "newEventDto.requestModeration", defaultValue = "true")
     @Mapping(target = "publishedOn", ignore = true)
     @Mapping(target = "confirmedRequests", constant = "0")
-    @Mapping(target = "views", ignore = true)
+    @Mapping(target = "rating", ignore = true)
     Event toEvent(NewEventDto newEventDto, UserDto initiator, Category category, Location location);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
@@ -43,7 +42,7 @@ public interface EventMapper {
     @Mapping(target = "publishedOn", ignore = true)
     @Mapping(target = "state", ignore = true) // Состояние обновляется отдельно
     @Mapping(target = "confirmedRequests", ignore = true)
-    @Mapping(target = "views", ignore = true)
+    @Mapping(target = "rating", ignore = true)
     @Mapping(target = "eventDate", source = "updateRequest.eventDate", dateFormat = DATE_FORMAT)
     @Mapping(target = "category", source = "category")
     @Mapping(target = "location", source = "location")
