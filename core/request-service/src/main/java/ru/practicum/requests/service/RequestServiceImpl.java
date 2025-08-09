@@ -1,6 +1,7 @@
 package ru.practicum.requests.service;
 
 import lombok.RequiredArgsConstructor;
+import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.error.exception.ConflictException;
@@ -35,11 +36,13 @@ public class RequestServiceImpl implements RequestService {
     private final InternalUserClient internalUserClient;
     private final InternalEventClient internalEventClient;
     private final RequestMapper requestMapper;
-    private final UserActionControllerGrpc.UserActionControllerBlockingStub userActionControllerBlockingStub;
+
+    @GrpcClient("collector-service")
+    private UserActionControllerGrpc.UserActionControllerBlockingStub collectorStub;
 
     @Override
     public boolean checkExistsByEventIdAndRequesterIdAndStatus(Long eventId, Long userId, RequestStatus status) {
-        return requestRepository.existsByEventIdAndRequesterIdAndStatus(eventId, userId, status);
+        return requestRepository.existsByEventAndRequesterAndStatus(eventId, userId, status);
     }
 
     @Override
@@ -92,7 +95,7 @@ public class RequestServiceImpl implements RequestService {
                             .setNanos(Instant.now().getNano())
                             .build())
                     .build();
-            userActionControllerBlockingStub.collectUserAction(userAction);
+            collectorStub.collectUserAction(userAction);
         }
 
         return requestMapper.toDto(savedRequest);

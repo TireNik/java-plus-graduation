@@ -21,7 +21,7 @@ import java.util.List;
 @RequestMapping("/admin/users")
 @RequiredArgsConstructor
 @Validated
-public class UserControllerAdmin implements UserAdminClient {
+public class UserControllerAdmin {
 
     private final UserService userService;
 
