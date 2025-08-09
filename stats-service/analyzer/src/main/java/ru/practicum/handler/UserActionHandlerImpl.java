@@ -6,9 +6,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
-import ru.practicum.mapper.UserActionMapper;
+import ru.practicum.model.ActionType;
 import ru.practicum.model.UserAction;
 import ru.practicum.repository.UserActionRepository;
+
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -16,34 +18,47 @@ import ru.practicum.repository.UserActionRepository;
 @Transactional(readOnly = true)
 public class UserActionHandlerImpl implements UserActionHandler {
     private final UserActionRepository userActionRepository;
-    private final UserActionMapper userActionMapper;
 
     @Value("${application.action-weight.view}")
-    private float view;
+    private double view;
     @Value("${application.action-weight.register}")
-    private float register;
+    private double register;
     @Value("${application.action-weight.like}")
-    private float like;
+    private double like;
 
     @Transactional
     @Override
-    public void handle(UserActionAvro action) {
-        Long eventId = action.getEventId();
-        Long userId = action.getUserId();
-        Float newActionMark = switch (action.getActionType()) {
-            case LIKE -> like;
-            case REGISTER -> register;
-            case VIEW -> view;
-        };
+    public void handle(UserActionAvro avro) {
+        log.info("Сохранение действия пользователя: {}", avro);
+        Optional<UserAction> userActionOpt = userActionRepository.findByUserIdAndEventId(avro.getUserId(),
+                avro.getEventId());
 
-        if (!userActionRepository.existsByEventIdAndUserId(eventId, userId)) {
-            userActionRepository.save(userActionMapper.mapToUserAction(action));
-        } else {
-            UserAction userAction = userActionRepository.findByEventIdAndUserId(eventId, userId);
-            if (userAction.getMark() < newActionMark) {
-                userAction.setMark(newActionMark);
-                userAction.setTimestamp(action.getTimestamp());
+        if (userActionOpt.isPresent()) {
+            UserAction userAction = userActionOpt.get();
+            Double weight = toWeight(userAction.getActionType());
+            Double newWeight = toWeight(ActionType.valueOf(avro.getActionType().name()));
+
+            if (newWeight > weight) {
+                userAction.setActionType(ActionType.valueOf(avro.getActionType().name()));
+                userAction.setTimestamp(avro.getTimestamp());
+                userActionRepository.save(userAction);
             }
+        } else {
+            UserAction userAction = UserAction.builder()
+                    .userId(avro.getUserId())
+                    .eventId(avro.getEventId())
+                    .actionType(ActionType.valueOf(avro.getActionType().name()))
+                    .timestamp(avro.getTimestamp())
+                    .build();
+            userActionRepository.save(userAction);
         }
+    }
+
+    private Double toWeight(ActionType actionType) {
+        return switch (actionType) {
+            case VIEW -> view;
+            case REGISTER -> register;
+            case LIKE -> like;
+        };
     }
 }

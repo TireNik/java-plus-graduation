@@ -1,5 +1,6 @@
 package ru.practicum.stats.client;
 
+import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Service;
 import ru.practicum.ewm.grpc.stats.controller.RecommendationsControllerGrpc;
@@ -15,45 +16,61 @@ import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+@Slf4j
 @Service
 public class RecommendationsClient {
-    private final RecommendationsControllerGrpc.RecommendationsControllerBlockingStub client;
-
-    public RecommendationsClient(@GrpcClient("analyzer") RecommendationsControllerGrpc.RecommendationsControllerBlockingStub client) {
-        this.client = client;
-    }
+    @GrpcClient("analyzer")
+    RecommendationsControllerGrpc.RecommendationsControllerBlockingStub client;
 
     public Stream<RecommendedEventProto> getRecommendationsForUser(long userId, int maxResults) {
-        UserPredictionsRequestProto request = UserPredictionsRequestProto.newBuilder()
-                .setUserId(userId)
-                .setMaxResults(maxResults)
-                .build();
+        try {
+            UserPredictionsRequestProto request = UserPredictionsRequestProto.newBuilder()
+                    .setUserId(userId)
+                    .setMaxResults(maxResults)
+                    .build();
 
-        Iterator<RecommendedEventProto> iterator = client.getRecommendationsForUser(request);
+            // gRPC-метод getSimilarEvents возвращает Iterator, потому что в его схеме
+            // мы указали, что он должен вернуть поток сообщений (stream stats.message.RecommendedEventProto)
+            Iterator<RecommendedEventProto> iterator = client.getRecommendationsForUser(request);
 
-        return asStream(iterator);
+            // преобразуем Iterator в Stream
+            return asStream(iterator);
+        } catch (Exception e) {
+            log.error("Error while getting recommendations for user {}", userId, e);
+            return Stream.empty();
+        }
     }
 
     public Stream<RecommendedEventProto> getSimilarEvents(long eventId, long userId, int maxResults) {
-        SimilarEventsRequestProto request = SimilarEventsRequestProto.newBuilder()
-                .setEventId(eventId)
-                .setUserId(userId)
-                .setMaxResults(maxResults)
-                .build();
+        try {
+            SimilarEventsRequestProto request = SimilarEventsRequestProto.newBuilder()
+                    .setEventId(eventId)
+                    .setUserId(userId)
+                    .setMaxResults(maxResults)
+                    .build();
 
-        Iterator<RecommendedEventProto> iterator = client.getSimilarEvents(request);
+            Iterator<RecommendedEventProto> iterator = client.getSimilarEvents(request);
 
-        return asStream(iterator);
+            return asStream(iterator);
+        } catch (Exception e) {
+            log.error("Error while getting similar events for event {}", eventId, e);
+            return Stream.empty();
+        }
     }
 
     public Stream<RecommendedEventProto> getInteractionsCount(List<Long> eventIds) {
-        InteractionsCountRequestProto request = InteractionsCountRequestProto.newBuilder()
-                .addAllEventId(eventIds)
-                .build();
+        try {
+            InteractionsCountRequestProto request = InteractionsCountRequestProto.newBuilder()
+                    .addAllEventId(eventIds)
+                    .build();
 
-        Iterator<RecommendedEventProto> iterator = client.getInteractionsCount(request);
+            Iterator<RecommendedEventProto> iterator = client.getInteractionsCount(request);
 
-        return asStream(iterator);
+            return asStream(iterator);
+        } catch (Exception e) {
+            log.error("Error while getting interactions count for events {}", eventIds, e);
+            return Stream.empty();
+        }
     }
 
     private Stream<RecommendedEventProto> asStream(Iterator<RecommendedEventProto> iterator) {

@@ -7,20 +7,18 @@ import org.springframework.data.repository.query.Param;
 import ru.practicum.model.UserAction;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public interface UserActionRepository extends JpaRepository<UserAction, Long> {
     List<UserAction> findAllByUserId(Long userId, PageRequest pageRequest);
 
-    @Query("select distinct ua.eventId from UserAction ua where ua.userId in :userIds")
-    Set<Long> findAllEventIdsByUserId(@Param("userIds") Long userId);
-
     List<UserAction> findAllByEventIdInAndUserId(Set<Long> viewedEvents, Long userId);
 
-    @Query("select COALESCE(SUM(ua.mark), 0) from UserAction as ua where ua.eventId = :eventId")
-    Float getSumWeightByEventId(@Param("eventId") Long eventId);
+    List<UserAction> findAllByEventIdIn(Set<Long> eventIds);
+
+    Optional<UserAction> findByUserIdAndEventId(Long userId, Long eventId);
 
     boolean existsByEventIdAndUserId(Long eventId, Long userId);
-
-    UserAction findByEventIdAndUserId(Long eventId, Long userId);
 }
+

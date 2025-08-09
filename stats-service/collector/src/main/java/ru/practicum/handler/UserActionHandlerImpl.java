@@ -1,6 +1,8 @@
 package ru.practicum.handler;
 
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -8,42 +10,38 @@ import ru.practicum.ewm.grpc.stats.event.ActionTypeProto;
 import ru.practicum.ewm.grpc.stats.event.UserActionProto;
 import ru.practicum.ewm.stats.avro.ActionTypeAvro;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
-import ru.practicum.producer.KafkaProducer;
+import ru.practicum.producer.KafkaProducerService;
 
 import java.time.Instant;
 
 @Slf4j
-@RequiredArgsConstructor
 @Component
-public class UserActionHandlerImpl implements UserActionHandler {
-    private final KafkaProducer kafkaProducer;
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class UserActionHandlerImpl {
+    final KafkaProducerService kafkaProducer;
 
-    @Value("${collector.topic.user-action}")
-    private String topic;
+    @Value("${kafka.topic}")
+    String topic;
 
-    @Override
-    public void handleAction(UserActionProto userActionProto) {
-        var contract = UserActionAvro.newBuilder()
-                .setUserId(userActionProto.getUserId())
-                .setEventId(userActionProto.getEventId())
-                .setActionType(getActionType(userActionProto.getActionType()))
-                .setTimestamp(mapTimestampToInstant(userActionProto))
+    public void handle(UserActionProto proto) {
+        Instant timestamp = Instant.ofEpochSecond(proto.getTimestamp().getSeconds(), proto.getTimestamp().getNanos());
+        UserActionAvro avro = UserActionAvro.newBuilder()
+                .setUserId(proto.getUserId())
+                .setEventId(proto.getEventId())
+                .setActionType(getActionTypeAvro(proto.getActionType()))
+                .setTimestamp(timestamp)
                 .build();
-        log.info("Отправка события в Kafka: {}", contract);
-        kafkaProducer.send(contract, mapTimestampToInstant(userActionProto), userActionProto.getEventId(), topic);
-
+        kafkaProducer.send(avro, proto.getEventId(), timestamp, topic);
+        log.info("Событие {} успешно отправлено в топик {}", avro, topic);
     }
 
-    private Instant mapTimestampToInstant(UserActionProto userActionProto) {
-        return Instant.ofEpochSecond(userActionProto.getTimestamp().getSeconds(), userActionProto.getTimestamp().getNanos());
-    }
-
-    private ActionTypeAvro getActionType(ActionTypeProto actionTypeProto) {
-        return switch (actionTypeProto) {
+    private ActionTypeAvro getActionTypeAvro(ActionTypeProto actionType) {
+        return switch (actionType) {
             case ACTION_VIEW -> ActionTypeAvro.VIEW;
             case ACTION_REGISTER -> ActionTypeAvro.REGISTER;
             case ACTION_LIKE -> ActionTypeAvro.LIKE;
-            case UNRECOGNIZED -> null;
+            default -> throw new IllegalArgumentException("Неизвестный тип действия = " + actionType);
         };
     }
 }

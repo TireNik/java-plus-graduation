@@ -1,6 +1,7 @@
 package ru.practicum.stats.client;
 
 import com.google.protobuf.Timestamp;
+import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Service;
 import ru.practicum.ewm.grpc.stats.controller.UserActionControllerGrpc;
@@ -9,29 +10,28 @@ import ru.practicum.ewm.grpc.stats.event.UserActionProto;
 
 import java.time.Instant;
 
+@Slf4j
 @Service
 public class UserActionClient {
-    private final UserActionControllerGrpc.UserActionControllerBlockingStub userActionStub;
+    @GrpcClient("collector")
+    UserActionControllerGrpc.UserActionControllerBlockingStub client;
 
-    public UserActionClient(@GrpcClient("collector") UserActionControllerGrpc.UserActionControllerBlockingStub client) {
-        this.userActionStub = client;
-    }
+    public void collectUserAction(long userId, long eventId, ActionTypeProto actionType, Instant instant) {
+        try {
+            Timestamp timestamp = Timestamp.newBuilder()
+                    .setSeconds(instant.getEpochSecond())
+                    .setNanos(instant.getNano())
+                    .build();
+            UserActionProto request = UserActionProto.newBuilder()
+                    .setUserId(userId)
+                    .setEventId(eventId)
+                    .setActionType(actionType)
+                    .setTimestamp(timestamp)
+                    .build();
 
-    public void collectUserAction(Long eventId, Long userId, ActionTypeProto type, Instant instant) {
-        UserActionProto request = UserActionProto.newBuilder()
-                .setEventId(eventId)
-                .setUserId(userId)
-                .setActionType(type)
-                .setTimestamp(mapToTimestamp(instant))
-                .build();
-
-        userActionStub.collectUserAction(request);
-    }
-
-    private Timestamp mapToTimestamp(Instant instant) {
-        return Timestamp.newBuilder()
-                .setSeconds(instant.getEpochSecond())
-                .setNanos(instant.getNano())
-                .build();
+            client.collectUserAction(request);
+        } catch (Exception e) {
+            log.error("Error while sending request", e);
+        }
     }
 }

@@ -24,7 +24,9 @@ public class UserAction {
     @Column(name = "user_id")
     private Long userId;
 
-    private Float mark;
+    @Column(name = "action_type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    ActionType actionType;
 
     private Instant timestamp;
 }

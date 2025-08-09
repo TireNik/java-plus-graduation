@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
-import ru.practicum.mapper.EventSimilarityMapper;
 import ru.practicum.model.EventSimilarity;
 import ru.practicum.repository.EventSimilarityRepository;
 
@@ -15,20 +14,17 @@ import ru.practicum.repository.EventSimilarityRepository;
 @RequiredArgsConstructor
 public class EventSimilarityHandlerImpl implements EventSimilarityHandler {
     private final EventSimilarityRepository eventSimilarityRepository;
-    private final EventSimilarityMapper eventSimilarityMapper;
 
     @Transactional
     @Override
-    public void handle(EventSimilarityAvro eventSimilarity) {
-        Long eventA = eventSimilarity.getEventA();
-        Long eventB = eventSimilarity.getEventB();
-
-        if (!eventSimilarityRepository.existsByEventAAndEventB(eventA, eventB)) {
-            eventSimilarityRepository.save(eventSimilarityMapper.mapToEventSimilarity(eventSimilarity));
-        } else {
-            EventSimilarity oldEventSimilarity = eventSimilarityRepository.findByEventAAndEventB(eventA, eventB);
-            oldEventSimilarity.setScore(eventSimilarity.getScore());
-            oldEventSimilarity.setTimestamp(eventSimilarity.getTimestamp());
-        }
+    public void handle(EventSimilarityAvro avro) {
+        log.info("Сохранение схожести события: {}", avro);
+        EventSimilarity similarity = EventSimilarity.builder()
+                .eventA(avro.getEventA())
+                .eventB(avro.getEventB())
+                .score(avro.getScore())
+                .timestamp(avro.getTimestamp())
+                .build();
+        eventSimilarityRepository.save(similarity);
     }
 }
