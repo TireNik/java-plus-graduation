@@ -6,10 +6,9 @@ grpc:
 spring:
   kafka:
     producer:
-      properties:
-        bootstrap-servers: localhost:9092
-        key-serializer: org.apache.kafka.common.serialization.LongSerializer
-        value-serializer: ru.practicum.ewm.serializer.AvroSerializer
+      bootstrap-servers: localhost:9092
+      key-serializer: org.apache.kafka.common.serialization.LongSerializer
+      value-serializer: ru.practicum.serializer.AvroSerializer
 
 collector:
   topic:

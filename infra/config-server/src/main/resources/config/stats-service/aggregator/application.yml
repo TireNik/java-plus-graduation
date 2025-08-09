@@ -4,13 +4,13 @@ spring:
 
     producer:
       key-serializer: org.apache.kafka.common.serialization.LongSerializer
-      value-serializer: ru.practicum.ewm.serializer.AvroSerializer
+      value-serializer: ru.practicum.serializer.AvroSerializer
 
     consumer:
       user-action-client-id: UserActionClient
       user-action-group-id: UserActionGroup.Aggregator
       key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
-      value-deserializer: ru.practicum.ewm.deserializer.UserActionDeserializer
+      value-deserializer: ru.practicum.deserializer.UserActionDeserializer
       enable-auto-commit: false
       poll-timeout: 1000
 

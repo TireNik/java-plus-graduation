@@ -23,6 +23,7 @@ import ru.practicum.events.repository.category.CategoryRepository;
 import ru.practicum.events.repository.event.EventRepository;
 import ru.practicum.events.repository.event.LocationRepository;
 import ru.practicum.ewm.grpc.stats.event.ActionTypeProto;
+import ru.practicum.ewm.grpc.stats.event.RecommendedEventProto;
 import ru.practicum.requestClient.RequestInternalClient;
 import ru.practicum.requestClient.dto.RequestStatus;
 import ru.practicum.error.exception.ConflictException;
@@ -32,6 +33,7 @@ import ru.practicum.stats.client.RecommendationsClient;
 import ru.practicum.stats.client.UserActionClient;
 import ru.practicum.userClient.subscriptions.dto.SubscriptionDto;
 import ru.practicum.userClient.user.InternalUserClient;
+import ru.practicum.userClient.user.UserAdminClient;
 import ru.practicum.userClient.user.dto.UserDto;
 
 import java.time.Instant;
@@ -39,6 +41,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 
 @RequiredArgsConstructor
@@ -56,9 +61,39 @@ public class EventServiceImpl implements EventService {
     private final LocationRepository locationRepository;
     private final UserActionClient userActionClient;
     private final RecommendationsClient recommendationsClient;
+    private final RequestInternalClient requestClient;
+    private final UserAdminClient userClient;
     private static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
     private static final int TIME_BEFORE = 10;
+
+
+    @Override
+    public List<EventShortDto> getEventsRecommendations(Long userId, int maxResults) {
+        Map<Long, Double> recommendations = recommendationsClient
+                .getRecommendationsForUser(userId, maxResults)
+                .collect(Collectors.toMap(RecommendedEventProto::getEventId, RecommendedEventProto::getScore));
+
+        List<Event> events = eventRepository.findAllById(recommendations.keySet());
+        List<Long> initiatorIds = events.stream()
+                .map(Event::getInitiator)
+                .toList();
+
+        Map<Long, UserDto> initiators = userClient.getUsers(initiatorIds, 0, initiatorIds.size()).stream()
+                .collect(Collectors.toMap(UserDto::getId, Function.identity()));
+        return events.stream()
+                .map(event -> eventMapper.mapToShortDto(event, recommendations.get(event.getId()),
+                        initiators.get(event.getInitiator())))
+                .toList();
+    }
+
+    @Override
+    public void addLikeToEvent(Long eventId, Long userId) {
+        if (!requestClient.checkExistStatusRequest(eventId, userId, RequestStatus.CONFIRMED)) {
+            throw new ValidationException("Пользователь не участвует в этом событии.");
+        }
+        userActionClient.collectUserAction(eventId, userId, ActionTypeProto.ACTION_LIKE, Instant.now());
+    }
 
     @Transactional
     @Override

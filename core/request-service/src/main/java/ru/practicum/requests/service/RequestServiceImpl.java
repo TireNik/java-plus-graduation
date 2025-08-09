@@ -9,6 +9,9 @@ import ru.practicum.error.exception.ValidationException;
 import ru.practicum.eventClient.event.InternalEventClient;
 import ru.practicum.eventClient.event.dto.EventFullDto;
 import ru.practicum.eventClient.event.dto.EventState;
+import ru.practicum.ewm.grpc.stats.controller.UserActionControllerGrpc;
+import ru.practicum.ewm.grpc.stats.event.ActionTypeProto;
+import ru.practicum.ewm.grpc.stats.event.UserActionProto;
 import ru.practicum.requestClient.dto.ParticipationRequestDto;
 import ru.practicum.requestClient.dto.RequestUpdateDto;
 import ru.practicum.requestClient.dto.RequestUpdateResultDto;
@@ -19,6 +22,7 @@ import ru.practicum.requests.repository.RequestRepository;
 import ru.practicum.userClient.user.InternalUserClient;
 import ru.practicum.userClient.user.dto.UserDto;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +35,12 @@ public class RequestServiceImpl implements RequestService {
     private final InternalUserClient internalUserClient;
     private final InternalEventClient internalEventClient;
     private final RequestMapper requestMapper;
+    private final UserActionControllerGrpc.UserActionControllerBlockingStub userActionControllerBlockingStub;
+
+    @Override
+    public boolean checkExistsByEventIdAndRequesterIdAndStatus(Long eventId, Long userId, RequestStatus status) {
+        return requestRepository.existsByEventIdAndRequesterIdAndStatus(eventId, userId, status);
+    }
 
     @Override
     public List<ParticipationRequestDto> getUserRequests(Long userId) {
@@ -68,9 +78,21 @@ public class RequestServiceImpl implements RequestService {
                 event.getParticipantLimit() > 0 ? RequestStatus.PENDING : RequestStatus.CONFIRMED);
 
         Request savedRequest = requestRepository.save(request);
+
         if (request.getStatus() == RequestStatus.CONFIRMED) {
             event.setConfirmedRequests(event.getConfirmedRequests() + 1);
             internalEventClient.createEvent(event);
+
+            UserActionProto userAction = UserActionProto.newBuilder()
+                    .setUserId(userId)
+                    .setEventId(eventId)
+                    .setActionType(ActionTypeProto.ACTION_REGISTER)
+                    .setTimestamp(com.google.protobuf.Timestamp.newBuilder()
+                            .setSeconds(Instant.now().getEpochSecond())
+                            .setNanos(Instant.now().getNano())
+                            .build())
+                    .build();
+            userActionControllerBlockingStub.collectUserAction(userAction);
         }
 
         return requestMapper.toDto(savedRequest);

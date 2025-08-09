@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.userClient.user.dto.NewUserRequest;
 import ru.practicum.userClient.user.dto.UserDto;
 import ru.practicum.user.service.UserService;
+import ru.practicum.userClient.user.UserAdminClient;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -20,7 +21,7 @@ import java.util.List;
 @RequestMapping("/admin/users")
 @RequiredArgsConstructor
 @Validated
-public class UserControllerAdmin {
+public class UserControllerAdmin implements UserAdminClient {
 
     private final UserService userService;
 

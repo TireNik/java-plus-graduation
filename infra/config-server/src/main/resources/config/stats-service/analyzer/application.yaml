@@ -1,6 +1,6 @@
 grpc:
   server:
-    port: 9091
+    port: 9093
     security:
       enabled: false
 spring:
@@ -18,7 +18,7 @@ spring:
 
   datasource:
     driverClassName: org.postgresql.Driver
-    url:  jdbc:postgresql://stats-db:5432/ewm-stats
+    url:  jdbc:postgresql://localhost:6432/ewm-stats
     username: root
     password: root
 
@@ -28,12 +28,12 @@ spring:
       user-action-client-id: UserActionClient
       user-action-group-id: UserActionGroup.Analyzer
       key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
-      value-deserializer: ru.practicum.ewm.deserializer.UserActionDeserializer
+      value-deserializer: ru.practicum.deserializer.UserActionDeserializer
       enable-auto-commit: false
       poll-timeout: 1000
       similarity-client-id: SimilarityClient
       similarity-group-id: SimilarityGroup
-      similarity-deserializer: ru.practicum.ewm.deserializer.EventSimilarityDeserializer
+      similarity-deserializer: ru.practicum.deserializer.EventSimilarityDeserializer
 
 analyzer:
   topic:

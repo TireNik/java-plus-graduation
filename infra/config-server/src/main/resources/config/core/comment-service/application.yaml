@@ -7,12 +7,13 @@ spring:
           time_zone: UTC
   datasource:
     driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://ewm-db:5432/ewm-main
+    url: jdbc:postgresql://localhost:6532/ewm-main
     username: root
     password: root
   sql:
     init:
       mode: always
+
 stat-server:
   uri: http://stats-server:9090
 

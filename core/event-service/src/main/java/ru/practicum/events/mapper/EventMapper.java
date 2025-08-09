@@ -1,6 +1,7 @@
 package ru.practicum.events.mapper;
 
 import org.mapstruct.*;
+import ru.practicum.eventClient.category.dto.CategoryDto;
 import ru.practicum.eventClient.event.dto.EventFullDto;
 import ru.practicum.eventClient.event.dto.EventShortDto;
 import ru.practicum.eventClient.event.dto.NewEventDto;
@@ -58,6 +59,27 @@ public interface EventMapper {
 
     Event toEventFromFullDto(EventFullDto dto);
 
+    default EventShortDto mapToShortDto(Event event, Double rating, UserDto userDto) {
+        if (event == null) {
+            return null;
+        }
+
+        EventShortDto eventShortDto = new EventShortDto();
+        eventShortDto.setId(event.getId());
+        eventShortDto.setAnnotation(event.getAnnotation());
+        eventShortDto.setCategory(new CategoryDto(event.getCategory().getId(), event.getCategory().getName()));
+        eventShortDto.setConfirmedRequests(event.getConfirmedRequests() != null ? event.getConfirmedRequests().longValue() : 0L);
+        eventShortDto.setEventDate(event.getEventDate() != null ? event.getEventDate().format(DateTimeFormatter.ofPattern(DATE_FORMAT)) : null);
+        eventShortDto.setInitiator(UserShortDto.builder()
+                .id(userDto.getId())
+                .name(userDto.getName())
+                .build());
+        eventShortDto.setPaid(event.getPaid());
+        eventShortDto.setTitle(event.getTitle());
+        eventShortDto.setRating(rating);
+
+        return eventShortDto;
+    }
 
     default Long map(UserDto userDto) {
         return userDto != null ? userDto.getId() : null;

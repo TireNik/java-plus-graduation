@@ -2,6 +2,7 @@ package ru.practicum.requests.service;
 
 
 import ru.practicum.requestClient.dto.ParticipationRequestDto;
+import ru.practicum.requestClient.dto.RequestStatus;
 import ru.practicum.requestClient.dto.RequestUpdateDto;
 import ru.practicum.requestClient.dto.RequestUpdateResultDto;
 
@@ -18,4 +19,6 @@ public interface RequestService {
     List<ParticipationRequestDto> getEventRequests(Long userId, Long eventId);
 
     RequestUpdateResultDto updateEventRequests(Long userId, Long eventId, RequestUpdateDto updateDto);
+
+    boolean checkExistsByEventIdAndRequesterIdAndStatus(Long eventId, Long userId, RequestStatus status);
 }

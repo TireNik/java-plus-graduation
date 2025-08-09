@@ -6,18 +6,18 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Configuration;
 
 import java.util.Properties;
 
-@Component
+@Configuration
 public class KafkaProducerFabric {
 
-    @Value("${spring.kafka.producer.properties.bootstrap-servers}")
+    @Value("${spring.kafka.producer.bootstrap-servers}")
     private String bootstrapServers;
-    @Value("${spring.kafka.producer.properties.key-serializer}")
+    @Value("${spring.kafka.producer.key-serializer}")
     private String keySerializer;
-    @Value("${spring.kafka.producer.properties.value-serializer}")
+    @Value("${spring.kafka.producer.value-serializer}")
     private String valueSerializer;
 
     @Bean

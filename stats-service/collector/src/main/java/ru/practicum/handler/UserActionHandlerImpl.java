@@ -18,7 +18,7 @@ import java.time.Instant;
 public class UserActionHandlerImpl implements UserActionHandler {
     private final KafkaProducer kafkaProducer;
 
-    @Value("${collection.topic.user-action}")
+    @Value("${collector.topic.user-action}")
     private String topic;
 
     @Override
