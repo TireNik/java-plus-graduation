@@ -1,7 +1,6 @@
 package ru.practicum.requests.service;
 
 import lombok.RequiredArgsConstructor;
-import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.error.exception.ConflictException;
@@ -10,9 +9,8 @@ import ru.practicum.error.exception.ValidationException;
 import ru.practicum.eventClient.event.InternalEventClient;
 import ru.practicum.eventClient.event.dto.EventFullDto;
 import ru.practicum.eventClient.event.dto.EventState;
-import ru.practicum.ewm.grpc.stats.controller.UserActionControllerGrpc;
-import ru.practicum.ewm.grpc.stats.event.ActionTypeProto;
-import ru.practicum.ewm.grpc.stats.event.UserActionProto;
+import ru.practicum.grpc.stats.action.ActionTypeProto;
+import ru.practicum.grpc.stats.action.UserActionProto;
 import ru.practicum.requestClient.dto.ParticipationRequestDto;
 import ru.practicum.requestClient.dto.RequestUpdateDto;
 import ru.practicum.requestClient.dto.RequestUpdateResultDto;

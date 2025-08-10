@@ -8,11 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
-import ru.practicum.ewm.grpc.stats.controller.RecommendationsControllerGrpc;
-import ru.practicum.ewm.grpc.stats.event.InteractionsCountRequestProto;
-import ru.practicum.ewm.grpc.stats.event.RecommendedEventProto;
-import ru.practicum.ewm.grpc.stats.event.SimilarEventsRequestProto;
-import ru.practicum.ewm.grpc.stats.event.UserPredictionsRequestProto;
+import ru.practicum.grpc.stats.recommendation.*;
 import ru.practicum.service.RecommendationsHandler;
 
 @Slf4j

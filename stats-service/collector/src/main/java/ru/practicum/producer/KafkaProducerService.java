@@ -1,19 +1,22 @@
 package ru.practicum.producer;
 
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.LongSerializer;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import ru.practicum.serializer.AvroSerializer;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Properties;
 
-@Component
+@Service
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class KafkaProducerService implements AutoCloseable {
     final KafkaProducer<Long, SpecificRecordBase> producer;
 

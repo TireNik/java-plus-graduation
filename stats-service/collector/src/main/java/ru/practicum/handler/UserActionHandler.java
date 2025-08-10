@@ -6,10 +6,10 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import ru.practicum.ewm.grpc.stats.event.ActionTypeProto;
-import ru.practicum.ewm.grpc.stats.event.UserActionProto;
 import ru.practicum.ewm.stats.avro.ActionTypeAvro;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
+import ru.practicum.grpc.stats.action.ActionTypeProto;
+import ru.practicum.grpc.stats.action.UserActionProto;
 import ru.practicum.producer.KafkaProducerService;
 
 import java.time.Instant;
@@ -18,7 +18,7 @@ import java.time.Instant;
 @Component
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserActionHandlerImpl {
+public class UserActionHandler {
     final KafkaProducerService kafkaProducer;
 
     @Value("${kafka.topic}")

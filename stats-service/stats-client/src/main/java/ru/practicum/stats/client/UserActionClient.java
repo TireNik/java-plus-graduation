@@ -5,9 +5,9 @@ import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import ru.practicum.ewm.grpc.stats.controller.UserActionControllerGrpc;
-import ru.practicum.ewm.grpc.stats.event.ActionTypeProto;
-import ru.practicum.ewm.grpc.stats.event.UserActionProto;
+import ru.practicum.grpc.stats.action.ActionTypeProto;
+import ru.practicum.grpc.stats.action.UserActionProto;
+import ru.practicum.grpc.stats.collector.UserActionControllerGrpc;
 
 import java.time.Instant;
 

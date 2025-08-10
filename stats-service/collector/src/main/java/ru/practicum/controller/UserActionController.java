@@ -9,16 +9,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
-import ru.practicum.ewm.grpc.stats.controller.UserActionControllerGrpc;
-import ru.practicum.ewm.grpc.stats.event.UserActionProto;
-import ru.practicum.handler.UserActionHandlerImpl;
+import ru.practicum.grpc.stats.action.UserActionProto;
+import ru.practicum.grpc.stats.collector.UserActionControllerGrpc;
+import ru.practicum.handler.UserActionHandler;
 
 @Slf4j
 @GrpcService
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserActionController extends UserActionControllerGrpc.UserActionControllerImplBase {
-    final UserActionHandlerImpl handler;
+    final UserActionHandler handler;
 
     @Override
     public void collectUserAction(UserActionProto request, StreamObserver<Empty> responseObserver) {
