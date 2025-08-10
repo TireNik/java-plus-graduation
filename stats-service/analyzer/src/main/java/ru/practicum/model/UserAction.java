@@ -2,31 +2,34 @@ package ru.practicum.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.time.Instant;
 
 
 @Entity
-@Builder
+@Table(name = "user_actions")
 @Getter
 @Setter
-@AllArgsConstructor
+@Builder
 @NoArgsConstructor
-@Table(name = "user_actions")
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserAction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
-    @Column(name = "event_id")
-    private Long eventId;
+    @Column(name = "user_id", nullable = false)
+    Long userId;
 
-    @Column(name = "user_id")
-    private Long userId;
+    @Column(name = "event_id", nullable = false)
+    Long eventId;
 
     @Column(name = "action_type", nullable = false)
     @Enumerated(EnumType.STRING)
     ActionType actionType;
 
-    private Instant timestamp;
+    @Column(name = "timestamp", nullable = false)
+    Instant timestamp;
 }

@@ -16,7 +16,6 @@ import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-@Slf4j
 @Service
 public class RecommendationsClient {
     @GrpcClient("analyzer")
@@ -29,14 +28,10 @@ public class RecommendationsClient {
                     .setMaxResults(maxResults)
                     .build();
 
-            // gRPC-метод getSimilarEvents возвращает Iterator, потому что в его схеме
-            // мы указали, что он должен вернуть поток сообщений (stream stats.message.RecommendedEventProto)
             Iterator<RecommendedEventProto> iterator = client.getRecommendationsForUser(request);
 
-            // преобразуем Iterator в Stream
             return asStream(iterator);
         } catch (Exception e) {
-            log.error("Error while getting recommendations for user {}", userId, e);
             return Stream.empty();
         }
     }
@@ -53,7 +48,6 @@ public class RecommendationsClient {
 
             return asStream(iterator);
         } catch (Exception e) {
-            log.error("Error while getting similar events for event {}", eventId, e);
             return Stream.empty();
         }
     }
@@ -68,7 +62,6 @@ public class RecommendationsClient {
 
             return asStream(iterator);
         } catch (Exception e) {
-            log.error("Error while getting interactions count for events {}", eventIds, e);
             return Stream.empty();
         }
     }

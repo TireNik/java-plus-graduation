@@ -16,18 +16,19 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class UserActionHandlerImpl implements UserActionHandler {
+public class UserActionHandlerImpl {
     private final UserActionRepository userActionRepository;
 
-    @Value("${application.action-weight.view}")
-    private double view;
-    @Value("${application.action-weight.register}")
-    private double register;
-    @Value("${application.action-weight.like}")
-    private double like;
+    @Value("${user-action.view:0.4}")
+    Double viewAction;
+
+    @Value("${user-action.register:0.8}")
+    Double registerAction;
+
+    @Value("${user-action.like:1.0}")
+    Double likeAction;
 
     @Transactional
-    @Override
     public void handle(UserActionAvro avro) {
         log.info("Сохранение действия пользователя: {}", avro);
         Optional<UserAction> userActionOpt = userActionRepository.findByUserIdAndEventId(avro.getUserId(),
@@ -56,9 +57,9 @@ public class UserActionHandlerImpl implements UserActionHandler {
 
     private Double toWeight(ActionType actionType) {
         return switch (actionType) {
-            case VIEW -> view;
-            case REGISTER -> register;
-            case LIKE -> like;
+            case VIEW -> viewAction;
+            case REGISTER -> registerAction;
+            case LIKE -> likeAction;
         };
     }
 }

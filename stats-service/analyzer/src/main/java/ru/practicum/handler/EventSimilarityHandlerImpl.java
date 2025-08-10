@@ -12,11 +12,10 @@ import ru.practicum.repository.EventSimilarityRepository;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class EventSimilarityHandlerImpl implements EventSimilarityHandler {
+public class EventSimilarityHandlerImpl {
     private final EventSimilarityRepository eventSimilarityRepository;
 
     @Transactional
-    @Override
     public void handle(EventSimilarityAvro avro) {
         log.info("Сохранение схожести события: {}", avro);
         EventSimilarity similarity = EventSimilarity.builder()

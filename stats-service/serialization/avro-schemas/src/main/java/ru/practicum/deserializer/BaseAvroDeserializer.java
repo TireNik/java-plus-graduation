@@ -1,20 +1,17 @@
 package ru.practicum.deserializer;
 
 import org.apache.avro.Schema;
+import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.common.serialization.Deserializer;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
+import org.springframework.kafka.support.serializer.DeserializationException;
 
 public class BaseAvroDeserializer<T extends SpecificRecordBase> implements Deserializer<T> {
-
     private final DecoderFactory decoderFactory;
-    private final Schema schema;
+    private final DatumReader<T> reader;
 
     public BaseAvroDeserializer(Schema schema) {
         this(DecoderFactory.get(), schema);
@@ -22,20 +19,19 @@ public class BaseAvroDeserializer<T extends SpecificRecordBase> implements Deser
 
     public BaseAvroDeserializer(DecoderFactory decoderFactory, Schema schema) {
         this.decoderFactory = decoderFactory;
-        this.schema = schema;
+        this.reader = new SpecificDatumReader<>(schema);
     }
 
     @Override
     public T deserialize(String topic, byte[] data) {
-        if (data == null || data.length == 0) {
+        try {
+            if (data != null) {
+                BinaryDecoder decoder = decoderFactory.binaryDecoder(data, null);
+                return this.reader.read(null, decoder);
+            }
             return null;
-        }
-        try (ByteArrayInputStream input = new ByteArrayInputStream(data)) {
-            Decoder decoder = decoderFactory.binaryDecoder(input, null);
-            DatumReader<T> reader = new SpecificDatumReader<>(schema);
-            return reader.read(null, decoder);
-        } catch (IOException e) {
-            throw new RuntimeException("Ошибка десериализации Avro сообщения", e);
+        } catch (Exception e) {
+            throw new DeserializationException("Ошибка десериализации данных из топика [" + topic + "]", data, false, e);
         }
     }
 }

@@ -1,11 +1,13 @@
 package ru.practicum.service;
 
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import ru.practicum.ewm.grpc.stats.event.InteractionsCountRequestProto;
 import ru.practicum.ewm.grpc.stats.event.RecommendedEventProto;
 import ru.practicum.ewm.grpc.stats.event.SimilarEventsRequestProto;
@@ -20,19 +22,21 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Service
+@Component
 @RequiredArgsConstructor
-public class RecommendationServiceImpl implements RecommendationService {
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class RecommendationsHandler {
+    final UserActionRepository userActionRepository;
+    final EventSimilarityRepository similarityRepository;
 
-    private final UserActionRepository userActionRepository;
-    private final EventSimilarityRepository eventSimilarityRepository;
+    @Value("${user-action.view:0.4}")
+    Double viewAction;
 
-    @Value("${application.action-weight.view}")
-    private double view;
-    @Value("${application.action-weight.register}")
-    private double register;
-    @Value("${application.action-weight.like}")
-    private double like;
+    @Value("${user-action.register:0.8}")
+    Double registerAction;
+
+    @Value("${user-action.like:1.0}")
+    Double likeAction;
 
     public List<RecommendedEventProto> getRecommendationsForUser(UserPredictionsRequestProto request) {
         Long userId = request.getUserId();
@@ -40,6 +44,7 @@ public class RecommendationServiceImpl implements RecommendationService {
         PageRequest pageRequest = PageRequest.of(0, limit,
                 Sort.by(Sort.Direction.DESC, "timestamp"));
 
+        // Получаем последние просмотренные события пользователя
         Set<Long> recentlyViewedEventIds = userActionRepository.findAllByUserId(userId, pageRequest).stream()
                 .map(UserAction::getEventId)
                 .collect(Collectors.toSet());
@@ -59,8 +64,8 @@ public class RecommendationServiceImpl implements RecommendationService {
         PageRequest pageRequest = PageRequest.of(0, request.getMaxResults(),
                 Sort.by(Sort.Direction.DESC, "score"));
 
-        List<EventSimilarity> similaritiesA = eventSimilarityRepository.findAllByEventA(eventId, pageRequest);
-        List<EventSimilarity> similaritiesB = eventSimilarityRepository.findAllByEventB(eventId, pageRequest);
+        List<EventSimilarity> similaritiesA = similarityRepository.findAllByEventA(eventId, pageRequest);
+        List<EventSimilarity> similaritiesB = similarityRepository.findAllByEventB(eventId, pageRequest);
 
         List<RecommendedEventProto> recommendations = new ArrayList<>();
 
@@ -96,8 +101,8 @@ public class RecommendationServiceImpl implements RecommendationService {
     private Set<Long> findCandidateRecommendations(Long userId, Set<Long> viewedEventIds, int limit) {
         PageRequest pageRequest = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "score"));
 
-        List<EventSimilarity> similaritiesA = eventSimilarityRepository.findAllByEventAIn(viewedEventIds, pageRequest);
-        List<EventSimilarity> similaritiesB = eventSimilarityRepository.findAllByEventBIn(viewedEventIds, pageRequest);
+        List<EventSimilarity> similaritiesA = similarityRepository.findAllByEventAIn(viewedEventIds, pageRequest);
+        List<EventSimilarity> similaritiesB = similarityRepository.findAllByEventBIn(viewedEventIds, pageRequest);
 
         Set<Long> recommendations = new HashSet<>();
 
@@ -122,7 +127,6 @@ public class RecommendationServiceImpl implements RecommendationService {
     private List<RecommendedEventProto> generateRecommendations(Set<Long> candidateEventIds,
                                                                 Long userId,
                                                                 int limit) {
-        // Рассчитываем score для каждого кандидата
         Map<Long, Double> eventScores = candidateEventIds.stream()
                 .collect(Collectors.toMap(eventId -> eventId,
                         eventId -> calculateRecommendationScore(eventId, userId, limit)));
@@ -136,8 +140,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 
     private Double calculateRecommendationScore(Long eventId, Long userId, int limit) {
         PageRequest pageRequest = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "score"));
-        List<EventSimilarity> similaritiesA = eventSimilarityRepository.findAllByEventA(eventId, pageRequest);
-        List<EventSimilarity> similaritiesB = eventSimilarityRepository.findAllByEventB(eventId, pageRequest);
+        List<EventSimilarity> similaritiesA = similarityRepository.findAllByEventA(eventId, pageRequest);
+        List<EventSimilarity> similaritiesB = similarityRepository.findAllByEventB(eventId, pageRequest);
 
         Map<Long, Double> similarityScores = new HashMap<>();
         collectViewedSimilarities(similaritiesA, true, userId, similarityScores);
@@ -200,10 +204,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 
     private Double toWeight(ActionType actionType) {
         return switch (actionType) {
-            case VIEW -> view;
-            case REGISTER -> register;
-            case LIKE -> like;
+            case VIEW -> viewAction;
+            case REGISTER -> registerAction;
+            case LIKE -> likeAction;
         };
     }
-
 }

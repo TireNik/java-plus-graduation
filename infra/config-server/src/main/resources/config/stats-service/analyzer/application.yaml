@@ -1,47 +1,42 @@
 grpc:
   server:
-    port: 9093
-    security:
-      enabled: false
+    port: 0
+
 spring:
+  datasource:
+    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:6432/ewm-stats
+    username: root
+    password: root
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: create-drop
     properties:
       hibernate:
         format_sql: true
-    show_sql: true
-
   sql:
     init:
       mode: always
 
-  datasource:
-    driverClassName: org.postgresql.Driver
-    url:  jdbc:postgresql://localhost:6432/ewm-stats
-    username: root
-    password: root
+hibernate:
+  jdbc:
+    time_zone: UTC
 
-  kafka:
-    bootstrap-server: localhost:9092
-    consumer:
-      user-action-client-id: UserActionClient
-      user-action-group-id: UserActionGroup.Analyzer
-      key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
-      value-deserializer: ru.practicum.deserializer.UserActionDeserializer
-      enable-auto-commit: false
-      poll-timeout: 1000
-      similarity-client-id: SimilarityClient
-      similarity-group-id: SimilarityGroup
-      similarity-deserializer: ru.practicum.deserializer.EventSimilarityDeserializer
+logbook:
+  format:
+    style: http
 
-analyzer:
-  topic:
-    user-action: stats.user-actions.v1
-    events-similarity: stats.events-similarity.v1
+user-action:
+  view: 0.4
+  register: 0.8
+  like: 1.0
 
-application:
-  action-weight:
-    view: 0.4
-    register: 0.8
-    like: 1.0
+kafka:
+  bootstrap-servers: localhost:9092
+  group-id:
+    action: analyzer.actions
+    similarity: analyzer.similaritys
+  topics:
+    action: stats.user-actions.v1
+    similarity: stats.events-similarity.v1
+  auto-commit: false
