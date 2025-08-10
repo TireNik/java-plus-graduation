@@ -12,6 +12,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.error.exception.ResourceNotFoundException;
 import ru.practicum.eventClient.event.dto.*;
 import ru.practicum.events.mapper.*;
 import ru.practicum.events.model.category.Category;
@@ -102,7 +103,7 @@ public class EventServiceImpl implements EventService {
         Event event = checkEventExists(eventId);
 
         if (event.getState() != EventState.PUBLISHED) {
-            throw new ConflictException("Событие должно быть в состоянии PUBLISHED для просмотра");
+            throw new ResourceNotFoundException("Событие должно быть в состоянии PUBLISHED для просмотра");
         }
 
         userActionClient.collectUserAction(userId, eventId, ActionTypeProto.ACTION_VIEW, Instant.now());
