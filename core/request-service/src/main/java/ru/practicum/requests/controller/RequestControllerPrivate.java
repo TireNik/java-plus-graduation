@@ -42,7 +42,7 @@ public class RequestControllerPrivate {
     @ResponseStatus(HttpStatus.CREATED)
     public ParticipationRequestDto createRequest(
             @PathVariable @Positive Long userId,
-            @RequestParam("eventId") @Positive Long eventId) {
+            @RequestParam("eventId") Long eventId) {
         return requestService.createRequest(userId, eventId);
     }
 

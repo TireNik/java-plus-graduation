@@ -20,6 +20,7 @@ import ru.practicum.requests.mapper.RequestMapper;
 import ru.practicum.requests.model.Request;
 import ru.practicum.requestClient.dto.RequestStatus;
 import ru.practicum.requests.repository.RequestRepository;
+import ru.practicum.stats.client.UserActionClient;
 import ru.practicum.userClient.user.InternalUserClient;
 import ru.practicum.userClient.user.dto.UserDto;
 
@@ -27,6 +28,8 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,13 +39,21 @@ public class RequestServiceImpl implements RequestService {
     private final InternalUserClient internalUserClient;
     private final InternalEventClient internalEventClient;
     private final RequestMapper requestMapper;
+    private final UserActionClient userActionClient;
 
-    @GrpcClient("collector-service")
-    private UserActionControllerGrpc.UserActionControllerBlockingStub collectorStub;
 
     @Override
     public boolean checkExistsByEventIdAndRequesterIdAndStatus(Long eventId, Long userId, RequestStatus status) {
         return requestRepository.existsByEventAndRequesterAndStatus(eventId, userId, status);
+    }
+
+    @Override
+    public Map<Long, List<ParticipationRequestDto>> getConfirmedRequests(List<Long> eventIds) {
+        List<Request> confirmedRequestsByEventId = requestRepository.findAllByEventInAndStatus(eventIds,
+                RequestStatus.CONFIRMED);
+        return confirmedRequestsByEventId.stream()
+                .map(requestMapper::toDto)
+                .collect(Collectors.groupingBy(ParticipationRequestDto::getEvent));
     }
 
     @Override
@@ -57,6 +68,9 @@ public class RequestServiceImpl implements RequestService {
     @Override
     @Transactional
     public ParticipationRequestDto createRequest(Long userId, Long eventId) {
+        if (eventId == null || eventId <= 0) {
+            throw new ConflictException("Некорректный идентификатор события");
+        }
         UserDto user = checkUserExists(userId);
         EventFullDto event = checkEventExists(eventId);
 
@@ -95,7 +109,7 @@ public class RequestServiceImpl implements RequestService {
                             .setNanos(Instant.now().getNano())
                             .build())
                     .build();
-            collectorStub.collectUserAction(userAction);
+            userActionClient.collectUserAction(userId, eventId, ActionTypeProto.ACTION_REGISTER, Instant.now());
         }
 
         return requestMapper.toDto(savedRequest);

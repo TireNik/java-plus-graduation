@@ -57,10 +57,9 @@ public class PublicEventController {
     }
 
     @GetMapping("/{eventId}")
-    public ResponseEntity<EventFullDto> getEvent(@RequestHeader(AuthHeaderKey) Long eventId, HttpServletRequest request) {
-        EventFullDto eventFullDto = eventService.getEventById(eventId, request);
-
-        return ResponseEntity.ok(eventFullDto);
+    @ResponseStatus(HttpStatus.OK)
+    public EventFullDto getEvent(@RequestHeader("X-EWM-USER-ID") Long userId, @PathVariable Long eventId) {
+        return eventService.getEventById(eventId, eventId);
     }
 
 

@@ -21,6 +21,8 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
     @EntityGraph(attributePaths = {"event", "requester"})
     List<Request> findAllByIdIn(List<Long> requestIds);
 
+    List<Request> findAllByEventInAndStatus(List<Long> eventIds, RequestStatus status);
+
     long countByEventAndStatus(Long eventId, RequestStatus status);
 
     boolean existsByEventAndRequesterAndStatus(Long eventId, Long userId, RequestStatus status);

@@ -25,6 +25,7 @@ import ru.practicum.events.repository.event.LocationRepository;
 import ru.practicum.ewm.grpc.stats.event.ActionTypeProto;
 import ru.practicum.ewm.grpc.stats.event.RecommendedEventProto;
 import ru.practicum.requestClient.RequestInternalClient;
+import ru.practicum.requestClient.dto.ParticipationRequestDto;
 import ru.practicum.requestClient.dto.RequestStatus;
 import ru.practicum.error.exception.ConflictException;
 import ru.practicum.error.exception.NotFoundException;
@@ -97,42 +98,20 @@ public class EventServiceImpl implements EventService {
 
     @Transactional
     @Override
-    public EventFullDto getEventById(Long id, HttpServletRequest request) {
-        String userIdHeader = request.getHeader("X-EWM-USER-ID");
-        Long userId;
-        try {
-            userId = userIdHeader != null ? Long.parseLong(userIdHeader) : null;
-        } catch (NumberFormatException e) {
-            throw new ValidationException("Некорректный формат X-EWM-USER-ID: " + userIdHeader);
+    public EventFullDto getEventById(Long userId, Long eventId) {
+        Event event = checkEventExists(eventId);
+
+        if (event.getState() != EventState.PUBLISHED) {
+            throw new ConflictException("Событие должно быть в состоянии PUBLISHED для просмотра");
         }
 
-        Event event = eventRepository.findById(id)
-                .filter(e -> e.getState() == EventState.PUBLISHED)
-                .orElseThrow(() -> new NotFoundException("Событие с id=" + id + " не найдено"));
-
-        try {
-            userActionClient.collectUserAction(
-                    id,
-                    userId,
-                    ActionTypeProto.ACTION_VIEW,
-                    Instant.now()
-            );
-        } catch (Exception e) {
-            log.error("Ошибка при отправке информации о просмотре для события id={} и пользователя id={}", id, userId, e);
-        }
-
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.warn("Поток был прерван во время ожидания", e);
-        }
-
-        long confirmedRequests = requestInternalClient.countConfirmedByEvent(id, RequestStatus.CONFIRMED);
+        userActionClient.collectUserAction(userId, eventId, ActionTypeProto.ACTION_VIEW, Instant.now());
 
         EventFullDto eventFullDto = eventMapper.toEventFullDto(event);
-        eventFullDto.setConfirmedRequests((int) confirmedRequests);
-        eventRepository.save(event);
+
+        List<ParticipationRequestDto> confirmedRequests = requestClient.getConfirmedRequests(List.of(event.getId()))
+                .get(event.getId());
+        eventFullDto.setConfirmedRequests(confirmedRequests == null ? 0 : confirmedRequests.size());
 
         return eventFullDto;
     }
@@ -324,12 +303,6 @@ public class EventServiceImpl implements EventService {
     public EventFullDto privateGetUserEvent(Long userId, Long eventId, HttpServletRequest request) {
         log.info("userId: {}", userId);
         try {
-//            statClient.hit(new StatDto(
-//                    "event-service",
-//                    request.getRequestURI(),
-//                    request.getRemoteAddr(),
-//                    LocalDateTime.now().format(FORMATTER)
-//            ));
 
             if (!internalUserClient.existsById(userId)) {
                 throw new NotFoundException("Пользователь с ID=" + userId + " не найден");
@@ -424,12 +397,6 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventShortDto> getSubscribedEvents(Long userId, int from, int size, HttpServletRequest request) {
-//        statClient.hit(new StatDto(
-//                "main-service",
-//                request.getRequestURI(),
-//                request.getRemoteAddr(),
-//                LocalDateTime.now().format(FORMATTER)
-//        ));
 
         Pageable pageable = PageRequest.of(
                 from / size, size, Sort.by(Sort.Direction.DESC, "eventDate"));

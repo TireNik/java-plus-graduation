@@ -4,9 +4,13 @@ import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.requestClient.RequestInternalClient;
+import ru.practicum.requestClient.dto.ParticipationRequestDto;
 import ru.practicum.requestClient.dto.RequestStatus;
 import ru.practicum.requests.repository.RequestRepository;
 import ru.practicum.requests.service.RequestService;
+
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/internal/requests")
@@ -26,5 +30,10 @@ public class RequestInternalController implements RequestInternalClient {
     public boolean checkExistStatusRequest(@PathVariable Long eventId,@PathVariable Long userId,
                                                                @RequestParam RequestStatus status) {
         return requestService.checkExistsByEventIdAndRequesterIdAndStatus(eventId, userId, status);
+    }
+
+    @Override
+    public Map<Long, List<ParticipationRequestDto>> getConfirmedRequests(List<Long> eventIds) {
+        return requestService.getConfirmedRequests(eventIds);
     }
 }
