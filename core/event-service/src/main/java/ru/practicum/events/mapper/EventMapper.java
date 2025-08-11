@@ -1,6 +1,7 @@
 package ru.practicum.events.mapper;
 
 import org.mapstruct.*;
+import ru.practicum.eventClient.category.dto.CategoryDto;
 import ru.practicum.eventClient.event.dto.EventFullDto;
 import ru.practicum.eventClient.event.dto.EventShortDto;
 import ru.practicum.eventClient.event.dto.NewEventDto;
@@ -11,7 +12,6 @@ import ru.practicum.events.model.event.Location;
 import ru.practicum.userClient.user.dto.UserDto;
 import ru.practicum.userClient.user.dto.UserShortDto;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 
@@ -33,7 +33,7 @@ public interface EventMapper {
     @Mapping(target = "requestModeration", source = "newEventDto.requestModeration", defaultValue = "true")
     @Mapping(target = "publishedOn", ignore = true)
     @Mapping(target = "confirmedRequests", constant = "0")
-    @Mapping(target = "views", ignore = true)
+    @Mapping(target = "rating", ignore = true)
     Event toEvent(NewEventDto newEventDto, UserDto initiator, Category category, Location location);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
@@ -43,7 +43,7 @@ public interface EventMapper {
     @Mapping(target = "publishedOn", ignore = true)
     @Mapping(target = "state", ignore = true) // Состояние обновляется отдельно
     @Mapping(target = "confirmedRequests", ignore = true)
-    @Mapping(target = "views", ignore = true)
+    @Mapping(target = "rating", ignore = true)
     @Mapping(target = "eventDate", source = "updateRequest.eventDate", dateFormat = DATE_FORMAT)
     @Mapping(target = "category", source = "category")
     @Mapping(target = "location", source = "location")
@@ -59,6 +59,27 @@ public interface EventMapper {
 
     Event toEventFromFullDto(EventFullDto dto);
 
+    default EventShortDto mapToShortDto(Event event, Double rating, UserDto userDto) {
+        if (event == null) {
+            return null;
+        }
+
+        EventShortDto eventShortDto = new EventShortDto();
+        eventShortDto.setId(event.getId());
+        eventShortDto.setAnnotation(event.getAnnotation());
+        eventShortDto.setCategory(new CategoryDto(event.getCategory().getId(), event.getCategory().getName()));
+        eventShortDto.setConfirmedRequests(event.getConfirmedRequests() != null ? event.getConfirmedRequests().longValue() : 0L);
+        eventShortDto.setEventDate(event.getEventDate() != null ? event.getEventDate().format(DateTimeFormatter.ofPattern(DATE_FORMAT)) : null);
+        eventShortDto.setInitiator(UserShortDto.builder()
+                .id(userDto.getId())
+                .name(userDto.getName())
+                .build());
+        eventShortDto.setPaid(event.getPaid());
+        eventShortDto.setTitle(event.getTitle());
+        eventShortDto.setRating(rating);
+
+        return eventShortDto;
+    }
 
     default Long map(UserDto userDto) {
         return userDto != null ? userDto.getId() : null;

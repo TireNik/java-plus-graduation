@@ -2,10 +2,12 @@ package ru.practicum.requests.service;
 
 
 import ru.practicum.requestClient.dto.ParticipationRequestDto;
+import ru.practicum.requestClient.dto.RequestStatus;
 import ru.practicum.requestClient.dto.RequestUpdateDto;
 import ru.practicum.requestClient.dto.RequestUpdateResultDto;
 
 import java.util.List;
+import java.util.Map;
 
 public interface RequestService {
 
@@ -18,4 +20,8 @@ public interface RequestService {
     List<ParticipationRequestDto> getEventRequests(Long userId, Long eventId);
 
     RequestUpdateResultDto updateEventRequests(Long userId, Long eventId, RequestUpdateDto updateDto);
+
+    Map<Long, List<ParticipationRequestDto>> getConfirmedRequests(List<Long> eventIds);
+
+    boolean checkExistsByEventIdAndRequesterIdAndStatus(Long eventId, Long userId, RequestStatus status);
 }

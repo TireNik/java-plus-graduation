@@ -24,6 +24,7 @@ public class Event {
     String annotation;
 
     boolean paid;
+
     String title;
 
     @Column(name = "event_date")
@@ -60,7 +61,10 @@ public class Event {
     @Column(name = "confirmed_requests")
     Integer confirmedRequests = 0;
 
-    @Column(name = "views")
-    Long views;
+    @Column(name = "ratings")
+    Double rating;
 
+    public boolean getPaid() {
+        return paid;
+    }
 }

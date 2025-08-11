@@ -7,7 +7,7 @@ spring:
           time_zone: UTC
   datasource:
     driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://ewm-db:5432/ewm-main
+    url: jdbc:postgresql://localhost:6532/ewm-main
     username: root
     password: root
   sql:
@@ -35,3 +35,16 @@ resilience4j.circuitbreaker:
       slidingWindowType: COUNT_BASED
       minimumNumberOfCalls: 1
       automaticTransitionFromOpenToHalfOpenEnabled: true
+
+grpc:
+  client:
+    analyzer:
+      address: 'discovery:///analyzer'
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext
+    collector:
+      address: 'static://collector:9090'
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext

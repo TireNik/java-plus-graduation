@@ -12,7 +12,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.StatDto;
+import ru.practicum.error.exception.ResourceNotFoundException;
 import ru.practicum.eventClient.event.dto.*;
 import ru.practicum.events.mapper.*;
 import ru.practicum.events.model.category.Category;
@@ -23,20 +23,29 @@ import ru.practicum.events.model.event.Location;
 import ru.practicum.events.repository.category.CategoryRepository;
 import ru.practicum.events.repository.event.EventRepository;
 import ru.practicum.events.repository.event.LocationRepository;
+import ru.practicum.grpc.stats.action.ActionTypeProto;
+import ru.practicum.grpc.stats.recommendation.RecommendedEventProto;
 import ru.practicum.requestClient.RequestInternalClient;
+import ru.practicum.requestClient.dto.ParticipationRequestDto;
 import ru.practicum.requestClient.dto.RequestStatus;
 import ru.practicum.error.exception.ConflictException;
 import ru.practicum.error.exception.NotFoundException;
 import ru.practicum.error.exception.ValidationException;
-import ru.practicum.stats.client.StatClient;
+import ru.practicum.stats.client.RecommendationsClient;
+import ru.practicum.stats.client.UserActionClient;
 import ru.practicum.userClient.subscriptions.dto.SubscriptionDto;
 import ru.practicum.userClient.user.InternalUserClient;
+import ru.practicum.userClient.user.UserAdminClient;
 import ru.practicum.userClient.user.dto.UserDto;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 
 @RequiredArgsConstructor
@@ -48,53 +57,62 @@ public class EventServiceImpl implements EventService {
 
     private final EventRepository eventRepository;
     private final EventMapper eventMapper;
-    private final StatClient statClient;
     private final CategoryRepository categoryRepository;
     private final LocationMapper locationMapper;
     private final InternalUserClient internalUserClient;
     private final LocationRepository locationRepository;
+    private final UserActionClient userActionClient;
+    private final RecommendationsClient recommendationsClient;
+    private final RequestInternalClient requestClient;
+    private final UserAdminClient userClient;
     private static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
     private static final int TIME_BEFORE = 10;
 
+
+    @Override
+    public List<EventShortDto> getEventsRecommendations(Long userId, int maxResults) {
+        Map<Long, Double> recommendations = recommendationsClient
+                .getRecommendationsForUser(userId, maxResults)
+                .collect(Collectors.toMap(RecommendedEventProto::getEventId, RecommendedEventProto::getScore));
+
+        List<Event> events = eventRepository.findAllById(recommendations.keySet());
+        List<Long> initiatorIds = events.stream()
+                .map(Event::getInitiator)
+                .toList();
+
+        Map<Long, UserDto> initiators = userClient.getUsers(initiatorIds, 0, initiatorIds.size()).stream()
+                .collect(Collectors.toMap(UserDto::getId, Function.identity()));
+        return events.stream()
+                .map(event -> eventMapper.mapToShortDto(event, recommendations.get(event.getId()),
+                        initiators.get(event.getInitiator())))
+                .toList();
+    }
+
+    @Override
+    public void addLikeToEvent(Long eventId, Long userId) {
+        if (!requestClient.checkExistStatusRequest(eventId, userId, RequestStatus.CONFIRMED)) {
+            throw new ValidationException("Пользователь не участвует в этом событии.");
+        }
+        userActionClient.collectUserAction(eventId, userId, ActionTypeProto.ACTION_LIKE, Instant.now());
+    }
+
     @Transactional
     @Override
-    public EventFullDto getEventById(Long id, HttpServletRequest request) {
-        Event event = eventRepository.findById(id)
-                .filter(e -> e.getState() == EventState.PUBLISHED)
-                .orElseThrow(() -> new NotFoundException("Событие с id=" + id + " не найдено"));
+    public EventFullDto getEventById(Long userId, Long eventId) {
+        Event event = checkEventExists(eventId);
 
-        StatDto statDto = new StatDto(
-                "main-service",
-                request.getRequestURI(),
-                request.getRemoteAddr(),
-                LocalDateTime.now().format(FORMATTER)
-        );
-        log.info("Статистика: {}", statDto);
-        statClient.hit(statDto);
-
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.warn("Поток был прерван во время ожидания", e);
+        if (event.getState() != EventState.PUBLISHED) {
+            throw new ResourceNotFoundException("Событие должно быть в состоянии PUBLISHED для просмотра");
         }
 
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime start = now.minusYears(TIME_BEFORE);
-
-        statClient.getStat(start.toString(),
-                        now.toString(),
-                        List.of("/events/" + id), true)
-                .forEach(viewStats -> event.setViews(viewStats.getHits()));
-
-
-        long confirmedRequests = requestInternalClient.countConfirmedByEvent(id, RequestStatus.CONFIRMED);
+        userActionClient.collectUserAction(userId, eventId, ActionTypeProto.ACTION_VIEW, Instant.now());
 
         EventFullDto eventFullDto = eventMapper.toEventFullDto(event);
 
-        eventFullDto.setConfirmedRequests((int) confirmedRequests);
-        eventRepository.save(event);
+        List<ParticipationRequestDto> confirmedRequests = requestClient.getConfirmedRequests(List.of(event.getId()))
+                .get(event.getId());
+        eventFullDto.setConfirmedRequests(confirmedRequests == null ? 0 : confirmedRequests.size());
 
         return eventFullDto;
     }
@@ -104,13 +122,7 @@ public class EventServiceImpl implements EventService {
                                                LocalDateTime rangeStart, LocalDateTime rangeEnd,
                                                Boolean onlyAvailable, String sort, int from, int size,
                                                HttpServletRequest request) {
-        StatDto statDto = new StatDto(
-                "main-service",
-                request.getRequestURI(),
-                request.getRemoteAddr(),
-                LocalDateTime.now().format(FORMATTER)
-        );
-        statClient.hit(statDto);
+
 
         if (rangeStart != null && rangeEnd != null && rangeStart.isAfter(rangeEnd)) {
             throw new ValidationException("Начало диапазона не может быть позже его конца");
@@ -292,12 +304,6 @@ public class EventServiceImpl implements EventService {
     public EventFullDto privateGetUserEvent(Long userId, Long eventId, HttpServletRequest request) {
         log.info("userId: {}", userId);
         try {
-            statClient.hit(new StatDto(
-                    "event-service",
-                    request.getRequestURI(),
-                    request.getRemoteAddr(),
-                    LocalDateTime.now().format(FORMATTER)
-            ));
 
             if (!internalUserClient.existsById(userId)) {
                 throw new NotFoundException("Пользователь с ID=" + userId + " не найден");
@@ -392,12 +398,6 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventShortDto> getSubscribedEvents(Long userId, int from, int size, HttpServletRequest request) {
-        statClient.hit(new StatDto(
-                "main-service",
-                request.getRequestURI(),
-                request.getRemoteAddr(),
-                LocalDateTime.now().format(FORMATTER)
-        ));
 
         Pageable pageable = PageRequest.of(
                 from / size, size, Sort.by(Sort.Direction.DESC, "eventDate"));

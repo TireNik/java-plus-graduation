@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,9 +21,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/events")
 @RequiredArgsConstructor
+@Slf4j
 public class PublicEventController {
 
     private final EventService eventService;
+    private final String AuthHeaderKey = "X-EWM-USER-ID";
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
@@ -54,9 +57,27 @@ public class PublicEventController {
     }
 
     @GetMapping("/{eventId}")
-    public ResponseEntity<EventFullDto> getEvent(@PathVariable Long eventId, HttpServletRequest request) {
-        EventFullDto eventFullDto = eventService.getEventById(eventId, request);
+    @ResponseStatus(HttpStatus.OK)
+    public EventFullDto getEvent(@RequestHeader("X-EWM-USER-ID") Long userId, @PathVariable Long eventId) {
+        return eventService.getEventById(eventId, eventId);
+    }
 
-        return ResponseEntity.ok(eventFullDto);
+
+    @GetMapping("/recommendations")
+    public List<EventShortDto> getEventsRecommendations(@RequestHeader(AuthHeaderKey) Long userId,
+                                                        @RequestParam(defaultValue = "10") int maxResults) {
+        log.info("Пришел GET запрос /events/recommendations от пользователя {} с параметром maxResults={}",
+                userId, maxResults);
+        List<EventShortDto> recommendations = eventService.getEventsRecommendations(userId, maxResults);
+        log.info("Отправлен ответ GET /events/recommendations пользователю {} с телом: {}",
+                userId, recommendations);
+        return recommendations;
+    }
+
+    @PutMapping("/{eventId}/like")
+    public void addLikeToEvent(@PathVariable Long eventId, @RequestHeader(AuthHeaderKey) Long userId) {
+        log.info("Пришел PUT запрос /events/{}/like от пользователя {}", eventId, userId);
+        eventService.addLikeToEvent(eventId, userId);
+        log.info("Обработан PUT запрос /events/{}/like от пользователя {}", eventId, userId);
     }
 }

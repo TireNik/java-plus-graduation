@@ -9,7 +9,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @SpringBootApplication
 @EnableDiscoveryClient
 @ConfigurationPropertiesScan
-@EnableFeignClients(basePackages = "ru.practicum")
+@EnableFeignClients(basePackages = "ru.practicum.userClient.user")
 public class UserServiceApp {
     public static void main(String[] args) {
         SpringApplication.run(UserServiceApp.class, args);

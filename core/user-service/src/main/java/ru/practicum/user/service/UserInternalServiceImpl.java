@@ -3,6 +3,7 @@ package ru.practicum.user.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.practicum.error.exception.ConflictException;
 import ru.practicum.error.exception.NotFoundException;
 import ru.practicum.user.mapper.UserMapper;
 import ru.practicum.user.model.User;
@@ -25,7 +26,7 @@ public class UserInternalServiceImpl implements UserInternalService {
     @Override
     public UserDto getUserById(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Пользователь не найден или недоступен"));
+                .orElseThrow(() -> new ConflictException("Пользователь не найден или недоступен"));
 
         return userMapper.toUserDto(user);
     }

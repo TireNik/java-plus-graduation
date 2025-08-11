@@ -15,4 +15,5 @@ public interface InternalEventClient {
 
     @PostMapping()
     void createEvent(@RequestBody EventFullDto eventFullDto);
+
 }

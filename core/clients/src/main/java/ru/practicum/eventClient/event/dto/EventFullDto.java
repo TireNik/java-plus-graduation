@@ -35,5 +35,5 @@ public class EventFullDto {
     LocationDto location;
     EventState state;
     Integer confirmedRequests;
-    Long views;
+    Double rating;
 }

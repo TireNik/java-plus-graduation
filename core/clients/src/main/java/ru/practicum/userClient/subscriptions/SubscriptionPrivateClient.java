@@ -9,7 +9,7 @@ import ru.practicum.userClient.subscriptions.dto.SubscriptionDto;
 
 import java.util.List;
 
-@FeignClient(name = "user-service", path = "/users")
+@FeignClient(name = "user-service", contextId = "subscriptionPrivateClient", path = "/users")
 public interface SubscriptionPrivateClient {
 
     @PostMapping("/{userId}/subscriptions/{subscribedToId}")

@@ -39,4 +39,5 @@ public class InternalEventServiceImpl implements InternalEventService{
         eventRepository.save(event);
         log.info("Событие с ID={} успешно создано", eventFullDto.getId());
     }
+
 }
